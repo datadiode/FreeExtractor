@@ -1,0 +1,158 @@
+<html>
+
+<head>
+   <style>
+      <!--
+      a:link       { color: #000996; font-weight: bold; text-decoration: none }
+      a:visited    { color: #000663; font-weight: bold; text-decoration: none }
+      a:hover      { color: white; background-color: black; font-weight: bold; text-decoration:  none }
+      font         { font-family: verdana, tahoma, arial, sans-serif; font-size: 11px;  line-height: 16px }
+      h2           { font-family: verdana, tahoma, arial, sans-serif; color: #000099; font-size: 22; font-decoration: bold }
+      -->
+   </style>
+   <title>FreeExtractor - the easiest way to create self extracting archives for Windows</title>
+</head>
+
+<body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0" marginheight="0" marginwidth="0">
+
+   <table border="0" width="100%" height="30" bgcolor="#000099" cellpadding="0" cellspacing="0">
+      <tr>
+         <td valign="middle" width="100%" height="30">&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.disoriented.com"><font face="verdana" size="1" color="#ffffff">Disoriented
+            Labs</font></a><font face="verdana" size="1" color="#ffffff">
+            &gt;&gt; FreeExtractor</font></td>
+      </tr>
+   </table>
+   <table border="0" cellspacing="15" width="100%">
+      <tr>
+         <td valign="top" align="left"><b>
+            <h2>FreeExtractor Source Code</h2>
+      </b>
+      <p><font face="Verdana">For the latest version or the most up-to-date source
+        code, visit <a href="http://www.disoriented.com">http://www.disoriented.com</a>.</font>
+      </p>
+      <p>&nbsp; </p>
+      <p> <b><font face="Verdana, Arial, Helvetica, sans-serif">How to build FreeExtractor</font></b>
+      </p>
+      <p>        <font face="verdana" size="1"> To build, you will need UPX (the Universal
+        Packer for Executables) and bin2h.exe in your path. They are included
+        in the utils/ directory. Copy them to your System directory (system32
+        on NT/2000) before you build. </font></p>
+      <font face="verdana" size="1"><p>By default, you will also need Microsoft's HTML Help Developers Kit and/or
+        the Platform SDK to get the latest versions of HTMLHelp.h and HTMLHelp.lib.
+        If having access to HTML Help within the Wizard isn't important to you,
+        you can #define NO_HTML_HELP at the top of FECommon.h, not link against
+        HTMLHelp.lib, and compile without it.</p>
+      <p>Open FreeExtractor.dsw with Visual Studio, and do a batch build for all
+        four release projects.</p>
+      <p>&nbsp;</p>
+      </font>
+      <p><font face="verdana" size="1"><b>Miscellaneous Notes</b></font></p>
+      <p><font face="verdana" size="1">Header.exe is the self-extractor header.
+        FEWizard.exe is the wizard that authors use to create self extractors.
+        MakeSFX.exe is the command line version of FEWizard. GetVersion is a little
+        (internal) utility we use for the build process.</font></p>
+      <p><font face="verdana" size="1">FreeExtractor was written in Win32 C with
+        Microsoft Visual C++ 6. We haven't tried building it under any other environment
+        / compiler.</font></p>
+      <p></p>
+      <p><font face="verdana" size="1">Icon.h and stub.h are dynamically generated
+        by bin2h.exe after header.exe is built. They are <b>not</b> missing from
+        the source code distribution.</font></p>
+      <p>&nbsp;</p>
+      <p><font face="Verdana, Arial, Helvetica, sans-serif"><a href="revhistory.txt">Revision
+        History / Change Log</a></font></p>
+      <p>&nbsp;</p>
+      <p></p>
+      <font face="verdana" size="1">
+<p><b>How FreeExtractor Works</b></p>
+      <p><br>
+        The principle behind all self-extractors is that binary data can be appended
+        to a Windows portable executable. At run time, the SFX reads the variables
+        and Zip file embedded within itself. The format of a FreeExtractor-created
+        archive looks like: </p>
+      <blockquote>
+        <pre>
+------------------------------------------------------------------------------
+|   header.exe   |  metadata  |    Zip File    |   Authenticode Information  |
+------------------------------------------------------------------------------
+(not to scale)
+
+
+header.exe                 - The executable stub
+metadata                   - Information about this self-extracting archive
+Zip File                   - The Zip file.
+Authenticode Information   - (Optional) Digital signature information
+</pre>
+      </blockquote>
+      <p>You can open a self-extractor in any hex editor and get a better idea
+        of how FreeExtractor works.</p>
+      <p>&nbsp;</p>
+      <p></p>
+      </font>
+      <p><strong><font face="Verdana" size="1">License</font></strong></p>
+            <p><font face="Verdana" size="1">(This license is borrowed from
+            zLib.)</font></p>
+            <p><font face="Verdana" size="1">This software is provided 'as-is',
+            without any express or implied warranty. In no event will the
+            author(s) be held liable for any damages arising from the use of
+            this software. Permission is granted to anyone to use this software
+            for any purpose, including commercial applications, and to alter it
+            and redistribute it freely, subject to the following restrictions:</font></p>
+            <p><font face="Verdana" size="1">1. The origin of this software must
+            not be misrepresented; you must not claim that you wrote the
+            original software. If you use this software in a product, an
+            acknowledgment in the product documentation would be appreciated but
+            is not required.</font></p>
+            <p><font face="Verdana" size="1">2. Altered source versions must be
+            plainly marked as such, and must not be misrepresented as being the
+            original software.</font></p>
+            <p><font face="Verdana" size="1">3. This notice may not be removed
+            or altered from any source distribution.</font></p>
+            <p><font face="Verdana" size="1"><font color="#696969">Code
+            Copyright (C) 2000 Andrew Fawcett (</font><a href="mailto:andrewfawcett@users.sourceforge.net?Subject=FreeExtractor"><font color="#696969">andrewfawcett@users.sourceforge.net</font></a><font color="#696969">)</font></font></p>
+
+      <p>&nbsp;</p>
+            <p><b><font face="Verdana" size="1">Acknowledgements</font></b></p>
+
+      <p><font face="Verdana" size="1">FreeExtractor contains portions of (or
+        derivatives of) Mark Adler and Jean-Loup Gailly's zLib and Gilles Vollant's
+        MiniUnzip. Thanks to them, and thanks to <a href="http://www.ignia.com/">Ignia</a>
+        for web hosting.</font></p>
+
+      <p>&nbsp;</p>
+            <p><font face="verdana" size="1"><b>Donations</b></font></p>
+            <p><font face="Verdana" size="1">The developers strive to create a
+            flexible, user-friendly, commercial-quality application. If you find
+            FreeExtractor useful, you are encouraged to make a small donation to
+            help further development. A </font><a href="https://www.yaskifo.com/register.asp?LNG=US&amp;ID=101898"><font face="Verdana" size="1">small
+            donation of US$10</font></a><font size="1"><font face="Verdana"> is
+            greatly appreciated.</font></font></p>
+            <p><font face="Verdana" size="1">Thanks!</font></p>
+            <p>&nbsp;</p>
+            <p><b><font face="Verdana" size="1">Contact</font></b></p>
+            <p><font face="Verdana" size="1">Please direct comments and
+            questions to <a href="mailto:andrewfawcett@users.sourceforge.net?Subject=FreeExtractor">Andrew
+            Fawcett</a>.</font></p>
+            <p>&nbsp;</td>
+         <td valign="top" align="left" width="20">&nbsp;</td>
+         <td valign="top" align="left" width="226">
+            <p></p>
+         </td>
+      </tr>
+   </table>
+   <br>
+   <br>
+   <br>
+   <br>
+   <br>
+   <br>
+   <br>
+   <table border="0" width="100%" bgcolor="#000099">
+      <tr>
+         <td>&nbsp;</td>
+      </tr>
+   </table>
+
+</body>
+
+</html>

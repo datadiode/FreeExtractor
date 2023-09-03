@@ -1,0 +1,191 @@
+<html><head><style><!--
+      a:link       { color: #000996; font-weight: bold; text-decoration: none }
+      a:visited    { color: #000663; font-weight: bold; text-decoration: none }
+      a:hover      { color: white; background-color: black; font-weight: bold; text-decoration: none }
+      font         { font-family: verdana, tahoma, arial, sans-serif; font-size: 11px; line-height: 16px }
+      h2           { font-family: verdana, tahoma, arial, sans-serif; color: #000099; font-size: 22; font-decoration: bold }
+      --></style><title>FreeExtractor - the easiest way to create self extracting archives for Windows</title></head><body bgcolor="#ffffff" topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0 marginheight=0 marginwidth=0><table border=0 width="100%" height=30 bgcolor="#000099" cellpadding=0 cellspacing=0><tr><td valign=middle width="100%" height=30>&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.disoriented.com" target=_blank><font face=verdana size=1 color="#ffffff">Disoriented Labs</font></a><font face=verdana size=1 color="#ffffff"> &gt;&gt; FreeExtractor</font></td></tr></table><table border=0 cellspacing=15 width="100%" height="87%"><tr>
+    <td valign=top align=left>
+   <b><font face=Verdana><h2>Revision History</h2></font></b>
+<pre>FreeExtractor v1.44, March 20, 2001
+
+   - When using non-standard dialog sizes, the intro bitmap now correctly scales. (No more ugly white gaps.)
+   - Zip files can be converted using SendTo Menu (right click a Zip file -> SendTo - > Convert Zip to SFX)
+   - MakeSFX: Build time and build rate calculated and displayed after compiling an SFX.
+   - Execution of 16-bit applications (e.g. old InstallShield setups) fixed.
+   - Added %sendto% path variable.
+   - Website URL updated (again, for good) to http://www.disoriented.com.
+
+
+
+FreeExtractor v1.43, February 18, 2001
+
+   - SFX: "FreeExtractor" removed from title bar and replaced with more subtle watermark
+   - SFX: Fixed metadata caching issue on Win98 when running multiple SFXs sequentially.
+   - FEWIZARD: Fixed loading of return carriages in default.ini strings
+   - FEWIZARD: Fixed issue with misdrawing of "Next" button on splash page in rare cases.
+   - UI: Fixed dialog layouts when using non-standard system font sizes   
+   - UI: Font style changed.
+   - Cursor changes to hand when mousing over URLs
+   - Updated visual style. New icons and bitmap included.
+   - Source to bin2h.exe now included in source distribution.
+   - Updated copyrights in code and documentation to include 2000 and 2001.
+   
+
+FreeExtractor v1.42.01, December 13, 2000
+
+   - Fixed issue with execution command introduced in v1.42.
+   
+
+FreeExtractor v1.42, December 13, 2000
+
+   - Added $quicklaunch$ path variable.
+   - Added support for execution of batch files and .COM files.
+   - Environment variables now expanded in path strings
+   - Fixed display issues under non-standard Windows color schemes
+   - Fixed issue with $startmenu$ path variable on non-English versions of Windows
+   - The working directory of all shortcuts is set to the target directory   
+   - Stricter path checking for UNC paths   
+
+FreeExtractor v1.41, December 10, 2000
+
+   - Added support for Authenticode code signing for SFXs
+   - Faster loading of larger SFXs
+   - SFX Name now defaults to "Unnamed Archive"
+   - DEV: Cleaned up and optimized a bunch of functions.
+   - Updated help
+   
+
+FreeExtractor v1.40.2, December 9, 2000
+
+   - DEV: replace splitthepath with more tokenized, optimized version
+   - DEV: Removed pragma / type warnings
+
+
+FreeExtractor v1.40.1, November 28, 2000
+
+   - Fixes an issue with creating multiple shortcuts
+   
+
+FreeExtractor v1.4, November 26, 2000
+
+   - Added ability to change SFX icon
+   - Added ability to create shortcuts.   
+   - Added new path variables:
+
+      $targetdir$    The extraction directory
+      $sendto$       The SendTo Menu
+      $favorites$    IE Favorites Menu
+      $startup$      User's Startup Folder
+      $startmenu$    User's Programs Folder in Start Menu
+      $fonts$        System Fonts directory
+         
+   - FEWizard: Added ability to restart wizard after creating a SFX.
+   - Path variables and command line parameters now work in exec command      
+   - Updated Help Files
+
+
+FreeExtractor v1.39.2, November 17, 2000
+
+   - Updates to MakeSFX.exe
+   - Internal header.exe restructuring
+
+FreeExtractor v1.39.1, November 15, 2000
+
+   - Minor updates to MakeSFX.exe
+   
+   
+FreeExtractor v1.39, November 14, 2000
+
+   - New option in FE Wizard to save your options as your default settings. (Useful when creating multiple self-extractors with similar options.)
+   - Document packaging: You can package MS Office Documents, Adobe Acrobat PDFs, Photoshop PDF files and more, and they'll open with their associated programs after extraction.
+   - You can package and auto-install applications to your Palm device. (Specify the .PRC to install in the execute field.)
+   - Better help integration; Context help works within FEWizard.
+   - Updated help documentation
+   - Path variables can be delimited with either "%"s or "$"s. ("%temp%" is now equivalent to "$temp$")
+   - Fixed minor help screen error with MakeSFX.exe.
+   - Fixed warning logic error in MakeSFX.exe.
+   
+
+FreeExtractor v1.38, November 02, 2000
+
+   - Brand new, expanded documentation in Microsoft HTML Help Format.
+   - Removed option to create UI-less self-extractors due to abuse by virus creators.
+   - Added ability to view properties in self-extractor (Right click -> Properties)
+   - Cleaned up source code. Added better source documentation.
+   - More descriptive error messages.
+   - Removed MakeSFX.exe from FESetup.exe to reduce file size. It's offered seperately.
+
+ 
+FreeExtractor v1.37, October 28, 2000
+   - Fixed auto extract path bug
+   - Improved source code comments.
+
+FreeExtractor v1.36, October 26, 2000
+   - Improved path checking and verification
+   - Fixed URL positioning bug on Wizard splash screen when displayed with a non-standard font.
+   
+FreeExtractor v1.32, October 24, 2000
+   - Fixed path parsing variable bug, which was introduced in v1.31 
+   
+   
+FreeExtractor v1.31, October 23, 2000
+   
+   - Fixed minor gramatical error 
+   - Fixed handling of '&' in the intro text and title of the splash screen 
+
+FreeExtractor v1.3, October 22, 2000
+
+   - Feature: Added option to delete files after extraction
+   - Update: Added support for "mailto"s in the URL field
+   - CRLFs allowed in the intro text
+   - Fixed auto-open-explorer folder bug
+   - Misc bug fixes   
+
+FreeExtractor v1.21, October 07, 2000
+
+   - Added MakeSFX.exe. MakeSFX.exe is a command-line version of FreeExtractor, which can be used to automate the creation of a self extractor via a batch file.
+   - Added $curdir$ path variable.
+   - Fixed a minor issue with file date/time after extraction.
+   - Minor user interface updated, based on user feedback.
+   
+
+
+FreeExtractor v1.2, October 04, 2000
+
+   - Path Variables: For the default extraction path, self-extractor authors can specify
+     path variables. Supported path variables are: 
+
+            $desktop$            The user's desktop folder
+            $programfiles$       Computer's program files folder (i.e. "C:\Program Files")
+            $temp$               System Temp Directory
+            $windir$             Windows directory (i.e. "c:\WinNT")
+            $sysdir$             Windows System Directory (i.e. "c:\WinNT\System32")
+
+      Examples:
+   
+            $programfiles$\My Application
+            $Desktop$\My Files
+
+     Of course, hard-coded paths will still work. 
+
+   - Files preseve their original date and time after file extraction (Jean-Paul Mesnage)
+   - Updated user interface. Better comforms to Microsoft's Wizard 97 spec.
+
+
+FreeExtractor v1.1, September 19, 2000
+
+   -  Removed all dependancies on the C run time (msvcrt.dll). Converted CRT I/O and memory
+      functions to their Win32 equivalents.
+      
+   -  Removed all unnessessary strings from header.exe and wizard.exe to reduce
+      .EXE size. (The wizard is now down to 33kb.)
+     
+   -  Cleaned up verbiage. More concise.
+   
+
+
+FreeExtractor v1.0, September 9, 2000
+
+   -  Initial Release</pre></td>
+  </tr></table><div align=center><br><font face=verdana size=1 color="#CCCCCC">FreeExtractor Copyright © 2000-2001 <a href="mailto:andrewfawcett@users.sourceforge.net?Subject=FreeExtractor">Andrew Fawcett</a></font><br><br></div><table border=0 width="100%" bgcolor="#000099" height=30><tr><td>&nbsp;</td></tr></table></body></html>

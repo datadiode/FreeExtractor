@@ -1,0 +1,173 @@
+<html><head><style><!--
+      a:link       { color: #000996; font-weight: bold; text-decoration: none }
+      a:visited    { color: #000663; font-weight: bold; text-decoration: none }
+      a:hover      { color: white; background-color: black; font-weight: bold; text-decoration: none }
+      font         { font-family: verdana, tahoma, arial, sans-serif; font-size: 11px; line-height: 16px }
+      h2           { font-family: verdana, tahoma, arial, sans-serif; color: #000099; font-size: 22; font-decoration: bold }
+      --></style><title>FreeExtractor - the easiest way to create self extracting archives for Windows</title></head><body bgcolor="#ffffff" topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0 marginheight=0 marginwidth=0><table border=0 width="100%" height=30 bgcolor="#000099" cellpadding=0 cellspacing=0><tr><td valign=middle width="100%" height=30>&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.disoriented.com" target=_blank><font face=verdana size=1 color="#ffffff">Disoriented Labs</font></a><font face=verdana size=1 color="#ffffff"> &gt;&gt; FreeExtractor</font></td></tr></table><table border=0 cellspacing=15 width="100%" height="87%">
+  <tr>
+    <td valign=top align=left>
+   <b><font face=Verdana>
+      <h2>Path Variables</h2></font></b>
+      <p><font face="Verdana, Arial">The following variables
+        can be used whereever dynamic paths are needed. FreeExtractor will expand
+        these variables as needed at run time.</font></p>
+      <ul>
+        <table cellpadding=2 cellspacing=0 border=3 bordercolor=white width="88%">
+          <tr> 
+            <td BorderColorDark="#0066CC" BorderColorlight="#000000" bgcolor="#000099" align="center" valign="top" height="7" width="27%"><font size=1 face="verdana,arial,helvetica" color="white"><b>Variable 
+              Name </b></font></td>
+            <td BorderColorDark="#0066CC" BorderColorlight="#000000" bgcolor="#000099" align="center" valign="top" height="7" width="73%"><font size=1 face="verdana,arial,helvetica" color="white"><b>Location</b></font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$desktop$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">The 
+              Users's Desktop</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$programfiles$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">Computer's 
+              program files folder </font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$temp$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">System 
+              Temp Directory</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$windir$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">Windows 
+              Directory</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$sysdir$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">Windows 
+              System Directory</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" height="13" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$curdir$</font></b></div>
+            </td>
+            <td  align="left" valign="top" height="13" width="73%"><font face="Verdana, Arial" size="2">The 
+              directory where the SFX is run from</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$targetdir$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">The 
+              extraction directory (shortcuts only)</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$Favorites$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">Internet 
+              Explorer Favorites Folder</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%" height="2"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$startup$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%" height="2"><font face="Verdana, Arial" size="2">The 
+              User's Start Menu &quot;Startup&quot; Folder</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$sendto$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">The 
+              User's SendTo directory</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$quicklaunch$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">QuickLaunch 
+              directory (IE4+); Defaults to $temp$ if not supported</font></td>
+          </tr>
+          <tr> 
+            <td  align="left" valign="top" width="27%"> 
+              <div align="center"><b><font face="Verdana, Arial" size="2">$startmenu$</font></b></div>
+            </td>
+            <td  align="left" valign="top" width="73%"><font face="Verdana, Arial" size="2">The 
+              User's &quot;Programs&quot; Folder in the Start Menu</font></td>
+          </tr>
+        </table>
+      </ul>
+      <blockquote>
+        <p>&nbsp;</p>
+      </blockquote>
+      <p><font face="Verdana, Arial">Examples:</font></p>
+      <blockquote>
+        <table cellpadding=2 cellspacing=0 border=1 bordercolor=white width="92%">
+          <tr>
+            <td bordercolordark="#0066CC" bordercolorlight="#000000" bgcolor="#000099" align="center" valign="top" height="7" width="100"><font size=1 face="verdana,arial,helvetica" color="white"><b>Type</b></font></td>
+            <td bordercolordark="#0066CC" bordercolorlight="#000000" bgcolor="#000099" align="center" valign="top" height="7" width="29%"><font size=1 face="verdana,arial,helvetica" color="white"><b>Function</b></font></td>
+            <td bordercolordark="#0066CC" bordercolorlight="#000000" bgcolor="#000099" align="center" valign="top" height="7" width="56%"><font size=1 face="verdana,arial,helvetica" color="white"><b>Example</b></font></td>
+          </tr>
+          <tr>
+            <td  align="left" valign="top" width="15%"><font face="Verdana, Arial"><b>Extraction
+              Dir</b></font></td>
+            <td  align="left" valign="top" width="29%">
+              <div align="center"><i><font face="Verdana, Arial"><font size="2">Program
+                Files </font></font></i></div>
+            </td>
+            <td  align="left" valign="top" width="56%"><font face="Verdana, Arial" size="2">$programfiles$\Your
+              Application Name </font></td>
+          </tr>
+          <tr>
+            <td  align="left" valign="top" width="15%"><font face="Verdana, Arial"></font></td>
+            <td  align="left" valign="top" width="29%">
+              <div align="center"><i><font face="Verdana, Arial">Temp
+                Directory</font></i></div>
+            </td>
+            <td  align="left" valign="top" width="56%"><font face="Verdana, Arial">$temp$</font></td>
+          </tr>
+          <tr>
+            <td  align="left" valign="top" width="15%">&nbsp;</td>
+            <td  align="left" valign="top" width="29%">&nbsp;</td>
+            <td  align="left" valign="top" width="56%">&nbsp;</td>
+          </tr>
+          <tr>
+            <td  align="left" valign="top" width="15%"><font face="Verdana, Arial"><b>Shortcuts</b></font></td>
+            <td  align="left" valign="top" width="29%">
+              <div align="center"><i><font face="Verdana, Arial"><font size="2">Start
+                Menu Shortcut</font></font></i></div>
+            </td>
+            <td  align="left" valign="top" width="56%"><font face="Verdana, Arial" size="2">$startmenu$\AppName\Program.lnk
+              -&gt; $targetdir$\program.exe</font></td>
+          </tr>
+          <tr>
+            <td  align="left" valign="top" width="15%"><font face="Verdana, Arial"></font></td>
+            <td  align="left" valign="top" width="29%">
+              <div align="center"><i><font face="Verdana, Arial"><font size="2">Internet
+                Explorer Favorites</font></font></i></div>
+            </td>
+            <td  align="left" valign="top" width="56%"><font face="Verdana, Arial" size="2">$favorites$\My
+              Website.lnk -&gt; http://www.website.com/</font></td>
+          </tr>
+          <tr>
+            <td  align="left" valign="top" width="15%"><font face="Verdana, Arial"></font></td>
+            <td  align="left" valign="top" width="29%">
+              <div align="center"><i><font face="Verdana, Arial"><font size="2">Quicklaunch
+                Shortcut</font></font></i></div>
+            </td>
+            <td  align="left" valign="top" width="56%"><font face="Verdana, Arial" size="2">$quicklaunch$\Program.lnk
+              -&gt; $targetdir$\program.exe</font></td>
+          </tr>
+        </table>
+        <p>&nbsp;</p>
+      </blockquote>
+    </td>
+  </tr></table><div align=center><br><font face=verdana size=1 color="#CCCCCC">FreeExtractor Copyright © 2000-2001 <a href="mailto:andrewfawcett@users.sourceforge.net?Subject=FreeExtractor">Andrew Fawcett</a></font><br><br></div><table border=0 width="100%" bgcolor="#000099" height=30><tr><td>&nbsp;</td></tr></table></body></html>

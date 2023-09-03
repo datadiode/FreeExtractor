@@ -1,0 +1,1 @@
+void CreateShortCut(LPCSTR pszShortcutFile, LPCSTR pszExe);

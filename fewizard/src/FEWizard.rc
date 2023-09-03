@@ -1,0 +1,351 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SETUP1              ICON    DISCARDABLE     "..\\res\\setup.ico"
+IDI_ICON1               ICON    DISCARDABLE     "..\\res\\icon1.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_INTRO               BITMAP  DISCARDABLE     "..\\res\\intro.bmp"
+IDB_BITMAP1             BITMAP  DISCARDABLE     "..\\res\\box.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_TEMPLATE DIALOGEX 0, 0, 331, 222
+STYLE DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_ACCEPTFILES | WS_EX_CONTEXTHELP | WS_EX_CONTROLPARENT
+CAPTION "FreeExtractor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "< Back",IDC_BACK,166,201,50,14
+    PUSHBUTTON      "Next >",IDC_NEXT,216,201,50,14
+    PUSHBUTTON      "Cancel",IDC_CANCEL,274,201,50,14
+    CONTROL         "",IDC_BOTTOMFRAME,"Static",SS_ETCHEDHORZ,0,192,335,1,
+                    WS_EX_ACCEPTFILES
+    CONTROL         "",IDC_BANNER,"Static",SS_SIMPLE | WS_GROUP,13,7,258,8,
+                    WS_EX_ACCEPTFILES | WS_EX_TRANSPARENT
+    CONTROL         "",IDC_SUBBANNER,"Static",SS_SIMPLE | WS_GROUP,29,17,242,
+                    10,WS_EX_ACCEPTFILES | WS_EX_TRANSPARENT
+    CONTROL         "",IDC_TOPFRAME,"Static",SS_ETCHEDHORZ,0,37,335,1,
+                    WS_EX_ACCEPTFILES
+END
+
+IDD_SPLASH DIALOGEX 0, 0, 335, 192
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "FreeExtractor Wizard",IDC_FENAME,117,7,207,13,0,
+                    WS_EX_TRANSPARENT
+    LTEXT           "",IDC_VERSION_DATE,118,19,207,8,0,WS_EX_TRANSPARENT
+    LTEXT           "",IDC_INTROTEXT,118,34,208,57,0,WS_EX_TRANSPARENT
+    LTEXT           "http://www.disoriented.com",IDC_URL,133,95,193,10,
+                    WS_TABSTOP,WS_EX_TRANSPARENT
+    LTEXT           "Click 'Next' to continue.",IDC_CLICKNEXT,118,174,207,11,
+                    0,WS_EX_TRANSPARENT
+END
+
+IDD_ZIPFILE DIALOGEX 0, 0, 276, 135
+STYLE DS_LOCALEDIT | DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_ACCEPTFILES | WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Open",IDC_OPEN,218,35,57,14
+    EDITTEXT        IDC_ZIPPATH,0,36,213,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER,WS_EX_STATICEDGE
+    EDITTEXT        IDC_EXEOUT,0,66,276,12,ES_READONLY | NOT WS_BORDER,
+                    WS_EX_STATICEDGE
+    LTEXT           "Source ZIP file:",IDC_ZIPLABEL,0,28,52,8
+    LTEXT           "Output EXE:",IDC_OUTLABEL,0,58,42,8
+    LTEXT           "You may either click 'Open' and select a .zip file or you may drag-and-drop it from Windows. The source .zip file will not be modified.",
+                    IDC_TEXT,0,0,276,21
+END
+
+IDD_OPTIONS DIALOGEX 0, 0, 276, 135
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "These settings will be displayed on your self-extractor's splash screen. While optional, they are recommended for the benefit of your end-users.",
+                    IDC_TEXT,0,0,276,17
+    LTEXT           "Archive Name",IDC_NAMELABEL,0,22,46,8
+    EDITTEXT        IDC_PACKAGENAME,0,30,276,12,ES_AUTOHSCROLL | NOT 
+                    WS_BORDER,WS_EX_STATICEDGE
+    LTEXT           "Website Address",IDC_WEBSITELABEL,0,46,54,8
+    EDITTEXT        IDC_URL,0,54,276,12,ES_AUTOHSCROLL | NOT WS_BORDER,
+                    WS_EX_STATICEDGE
+    LTEXT           "Introduction Message",IDC_INTROLABEL,0,70,69,8
+    EDITTEXT        IDC_INTROTEXT,0,78,276,57,ES_MULTILINE | ES_WANTRETURN | 
+                    NOT WS_BORDER | WS_VSCROLL,WS_EX_STATICEDGE
+END
+
+IDD_ADVOPTIONS DIALOGEX 0, 0, 276, 136
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_TOOLWINDOW | WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "&Automatically extract to default path",IDC_AUTOEXTRACT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,21,177,10
+    CONTROL         "&Open Destination Folder in Windows Explorer when completed",
+                    IDC_OPENFOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,
+                    35,265,10
+    EDITTEXT        IDC_DEFAULT_EXTRACTION_PATH,11,57,257,13,ES_AUTOHSCROLL | 
+                    NOT WS_BORDER,WS_EX_STATICEDGE
+    EDITTEXT        IDC_EXEC,11,83,257,13,ES_AUTOHSCROLL | NOT WS_BORDER,
+                    WS_EX_STATICEDGE
+    LTEXT           "Default &Extraction Path (optional)",IDC_PATHLABEL,11,
+                    48,78,8
+    LTEXT           "E&xecute when completed",IDC_EXECLABEL,11,75,83,8
+    LTEXT           "The following advanced options allow you to further customize this self-extractor. These options are intended primarily for software distribution and are all optional.",
+                    IDC_TEXT,0,0,275,20
+    CONTROL         "&Delete extracted files when program finishes",
+                    IDC_DELETEFILES,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,20,98,161,10
+END
+
+IDD_CONFIRM DIALOGEX 0, 0, 276, 136
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Per your settings, this self-extractor will perform the following actions:",
+                    IDC_TEXT,0,1,275,8
+    LTEXT           "If this is correct, click 'Next' and your self extractor will be built. If you would like to change these settings, click 'Back' and make any nessessary changes.",
+                    IDC_TEXT2,0,119,275,16
+    EDITTEXT        IDC_CONFIRMMESSAGE,10,13,256,95,ES_MULTILINE | 
+                    ES_READONLY | NOT WS_BORDER | WS_VSCROLL | NOT 
+                    WS_TABSTOP,WS_EX_STATICEDGE
+END
+
+IDD_PROGRESS DIALOGEX 0, 0, 276, 136
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Your self-extractor is being built. Please wait.",
+                    IDC_TEXT,0,0,275,22
+    LTEXT           "",IDC_PROGRESS,38,30,233,8
+    LTEXT           "Status:",IDC_STATUSLABEL,10,30,23,8
+END
+
+IDD_FINISHED DIALOGEX 0, 0, 276, 136
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "E&xecute Self-Extracting Archive",IDC_EXECUTE,10,39,121,
+                    14
+    LTEXT           "FreeExtractor has successfully created your self-extracting archive. It is recommend that you test this archive before you redistribute it.",
+                    IDC_TEXT,0,1,275,21
+    CONTROL         "Save these settings as my default responses in the future.",
+                    IDC_SAVESETTINGS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,
+                    126,275,10
+END
+
+IDD_SHORTCUT DIALOGEX 0, 0, 276, 136
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_TOOLWINDOW | WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "List1",IDC_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | 
+                    WS_BORDER | WS_TABSTOP,0,9,276,103
+    LTEXT           "Click 'Add' to have your self-extractor create a shortcut. Click 'Next' to continue.",
+                    IDC_TEXT,0,0,275,8
+    PUSHBUTTON      "&Add",IDC_ADD_SC,166,122,50,14
+    PUSHBUTTON      "&Remove",IDC_REMOVE_SC,226,122,50,14,WS_DISABLED
+END
+
+IDD_ICON DIALOGEX 0, 0, 276, 136
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Select New Icon",IDC_NEWICON,10,89,121,14
+    LTEXT           "You may change the icon for your self-extracting archive. If you do not select an icon, FreeExtractor will provide a default one for you.\n\nThe icon you choose must be a 2,238 byte, 32x32x256 color icon. ",
+                    IDC_TEXT,0,1,275,34
+END
+
+IDD_ADDSHORTCUT DIALOG DISCARDABLE  0, 0, 258, 140
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Add a shortcut"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,139,119,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,201,119,50,14
+    LTEXT           "Specify where you would like to create the shortcut, and where the shortcut should point to. For each, you may include path variables. See the included documentation for more information.",
+                    IDC_MAINTEXT,7,7,244,26
+    LTEXT           "Shortcut Location",IDC_SHORTCUTLABEL,7,36,244,8
+    LTEXT           "Shortcut Target",IDC_TARGETLABEL,7,72,244,8
+    EDITTEXT        IDC_SCLOCATION,7,44,244,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SCTARGET,7,81,244,14,ES_AUTOHSCROLL
+    LTEXT           "Example: $desktop$\\My Program.lnk",IDC_LOCATIONEXAMPLE,
+                    18,59,233,8
+    LTEXT           "Example: $targetdir$\\program.exe",IDC_TARGETEXAMPLE,18,
+                    96,233,8
+END
+
+IDD_ABOUT DIALOGEX 34, 22, 203, 105
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "About FreeExtractor"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_TITLE,40,12,158,8
+    LTEXT           "Copyright © 2000-2001 Andrew Fawcett and contributors.\n\nFreeExtractor is free and open source.",
+                    1016,40,24,158,43
+    DEFPUSHBUTTON   "OK",IDOK,143,84,49,14,WS_GROUP
+    LTEXT           "http://www.disoriented.com",1010,40,73,158,8,SS_NOTIFY
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SPLASH, DIALOG
+    BEGIN
+        VERTGUIDE, 117
+    END
+
+    IDD_ADVOPTIONS, DIALOG
+    BEGIN
+        RIGHTMARGIN, 275
+        VERTGUIDE, 11
+        VERTGUIDE, 20
+        VERTGUIDE, 268
+    END
+
+    IDD_SHORTCUT, DIALOG
+    BEGIN
+        VERTGUIDE, 156
+        VERTGUIDE, 166
+        VERTGUIDE, 216
+        VERTGUIDE, 226
+    END
+
+    IDD_ICON, DIALOG
+    BEGIN
+        VERTGUIDE, 10
+    END
+
+    IDD_ADDSHORTCUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 251
+        VERTGUIDE, 18
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 133
+    END
+
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU1 MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&About FreeExtractor",        IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_HAND1               CURSOR  DISCARDABLE     "..\\res\\hand.cur"
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

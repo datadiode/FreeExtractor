@@ -1,0 +1,52 @@
+<html><head><style><!--
+      a:link       { color: #000996; font-weight: bold; text-decoration: none }
+      a:visited    { color: #000663; font-weight: bold; text-decoration: none }
+      a:hover      { color: white; background-color: black; font-weight: bold; text-decoration: none }
+      font         { font-family: verdana, tahoma, arial, sans-serif; font-size: 11px; line-height: 16px }
+      h2           { font-family: verdana, tahoma, arial, sans-serif; color: #000099; font-size: 22; font-decoration: bold }
+      --></style><title>FreeExtractor Help - MakeSFX Options</title></head><body bgcolor="#ffffff" topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0 marginheight=0 marginwidth=0><table border=0 width="100%" height=30 bgcolor="#000099" cellpadding=0 cellspacing=0><tr><td valign=middle width="100%" height=30>&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.disoriented.com" target=_blank><font face=verdana size=1 color="#ffffff">Disoriented Labs</font></a><font face=verdana size=1 color="#ffffff"> &gt;&gt; FreeExtractor</font></td></tr></table><table border=0 cellspacing=15 width="100%" height="87%"><tr><td valign=top align=left><b> <font face="Verdana, Arial"> <h2>MakeSFX.exe Options</h2> </font> </b>
+      <pre>MakeSFX
+
+
+Converts a zip file into a 32-bit GUI Windows self-extractor.
+
+
+« Example usage »
+
+  makesfx.exe /zip="source.zip" /sfx="output.exe" [/title="Your Title"]
+  [/website="http://www.example.com"] [/intro="This is a test self extractor"]
+  [/defaultpath="$desktop$\My Files"] [/autoextract] [/openexplorerwindow]
+  [/shortcut="$desktop$\Program Shortcut.lnk|$targetdir$\Program.exe]
+  [/delete] [/icon="MyIcon.ico"] [/overwrite] [/?]
+
+« Self-extractor options »
+
+  /zip="file.zip"                     The source zip file (Required)
+  /sfx="out.exe"                      The output self-extractor (Required)
+  /title="Your Title"                 The user-friendly name
+  /website="http://www.example.com"   The embedded URL
+  /exec="setup.exe"                   Command to execute after extraction
+  /intro="This is the intro."         The splash screen intro text
+  /icon="MyIcon.ico"                  Changes the SFX icon. This must be a
+                                      2,238 byte, 32x32, 256 color icon.
+  /defaultpath="$desktop$\Folder"     Default extraction path. Valid variables
+                                      are: $desktop$, $temp$, $programfiles$,
+                                      $windir$, $targetdir$ and $sysdir$. You
+                                      may also hard-code a path.
+  /autoextract                        Automatically extract the contents to
+                                      the default path. Don't prompt the user.
+  /openexplorerwindow                 Open the target directory in Windows
+                                      Explorer.
+  /delete                             Deletes extracted files after program
+                                      specified in /exec is completed.
+  /shortcut="shortcut.lnk|target.ext" Creates a shortcut to target. Each may
+                                      include scriptable paths (like with
+                                      /defaultpath). You may specify up to 16
+                                      /shortcut entries.
+
+« MakeSFX Options »
+
+   /overwrite                         Overwrite the output EXE, if it exists.
+   /?                                 Show this help message
+</pre>
+    </td></tr></table><div align=center><br><font face=verdana size=1 color="#CCCCCC">FreeExtractor Copyright © 2000-2001 <a href="mailto:andrewfawcett@users.sourceforge.net?Subject=FreeExtractor">Andrew Fawcett</a></font><br><br></div><table border=0 width="100%" bgcolor="#000099" height=30><tr><td>&nbsp;</td></tr></table></body></html>

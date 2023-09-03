@@ -1,0 +1,13 @@
+#define IDH_INTRO          1000
+#define IDH_FEINTRO        1001
+#define IDH_MSINTRO        1002
+#define IDH_WIZARD         1003
+#define IDH_SPLASH         1004
+#define IDH_ZIP            1005
+#define IDH_OPTIONS        1006
+#define IDH_ADVOPTIONS     1007
+#define IDH_SHORTCUTS      1008
+#define IDH_ICONSS         1009
+#define IDH_CONFIRM        1010
+#define IDH_BUILD          1011
+#define IDH_FINISH         1012
