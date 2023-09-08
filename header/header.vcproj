@@ -52,9 +52,6 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="0"
-				AssemblerListingLocation=".\obj/"
-				ObjectFile=".\obj/"
-				ProgramDataBaseFileName=".\obj/"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -141,9 +138,6 @@
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				AssemblerListingLocation=".\obj/"
-				ObjectFile=".\obj/"
-				ProgramDataBaseFileName=".\obj/"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
