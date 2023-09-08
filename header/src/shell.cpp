@@ -52,7 +52,7 @@ extern "C"
 
          if ( SUCCEEDED( hres ) )
          {
-            WORD wsz[ MAX_PATH ];
+            WCHAR wsz[ MAX_PATH ];
             MultiByteToWideChar( CP_ACP, 0, pszShortcutFile, -1, wsz, MAX_PATH );
 
             hres = psl->SetPath( pszExe );

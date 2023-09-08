@@ -65,24 +65,17 @@
 
 
 
-#ifdef INCLUDE_HEADER
-#include "..\..\common\stub.h"
-#include "..\..\common\icon.h"
-#endif // INCLUDE_HEADER
-
-
-
 #define _TEXT_BLUE_        0x00AA0000
 #define _TEXT_BLACK_       0x00000000
 #define _TEXT_GRAY_        0x00BBBBBB
 
-#define _CRITICAL_         MB_OK | MB_ICONSTOP
+#define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.44"
+#define VERSION            "v1.45"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
-#define BUFFER_SIZE        65535
+#define BUFFER_SIZE        16384
 
 #define DLG_SCALE_X        8
 #define DLG_SCALE_Y        16
@@ -96,12 +89,13 @@
 #endif
 
 #ifdef _CONSOLE
-#define SetStatus(TheText)          WriteConsoleOut("%s\n", TheText);
+#define WriteConsoleOut             printf
+#define SetStatus(TheText)          puts(TheText)
 #else
-#define SetBannerText(TheText)      SetDlgItemText(hwndMain, IDC_BANNER, TheText);
-#define SetSubBannerText(TheText)   SetDlgItemText(hwndMain, IDC_SUBBANNER, TheText);
-#define SetTitle(TheTitle)          SetWindowText(hwndMain, TheTitle);
-#define SetStatus(TheText)          SetDlgItemText(hwndStatic, IDC_PROGRESS, TheText);
+#define SetBannerText(TheText)      SetDlgItemText(hwndMain, IDC_BANNER, TheText)
+#define SetSubBannerText(TheText)   SetDlgItemText(hwndMain, IDC_SUBBANNER, TheText)
+#define SetTitle(TheTitle)          SetWindowText(hwndMain, TheTitle)
+#define SetStatus(TheText)          SetDlgItemText(hwndStatic, IDC_PROGRESS, TheText)
 #endif
 
 #ifndef INVALID_SET_FILE_POINTER
@@ -109,14 +103,13 @@
 #endif
 
 
-#define CleanupPath(Path)           lstrcpy(Path, CleanPath(Path) );
-#define OpenExplorerFolder(TheDir)  ShellExecute( NULL, "explore", TheDir, NULL, NULL, SW_SHOW | SW_SHOWNORMAL );
-#define IsExtension(exec, exten)    !lstrcmpCI(exten, right(exec, 3))
+#define OpenExplorerFolder(TheDir)  ShellExecute( NULL, "explore", TheDir, NULL, NULL, SW_SHOW )
 
-#define MAIN_SETFONT(ControlID)    FormatText( GetDlgItem( hwndMain, ControlID), szActiveFont, iFontSize, FALSE);
-#define CHILD_SETFONT(ControlID)   FormatText( GetDlgItem( hwndStatic, ControlID), szActiveFont, iFontSize, FALSE);
-
-
+#define DLGITEM_SETFONT(hDlg, ControlID) \
+{ \
+   static HFONT hFont = NULL; \
+   FormatText( &hFont, GetDlgItem( hDlg, ControlID ), szActiveFont, iFontSize, FALSE ); \
+}
 
 /*
  
@@ -126,38 +119,36 @@
 HWND hwndMain, hwndStatic;
 
 HANDLE hFile;
-HANDLE h_ExtractThread;
+HANDLE hExtractThread;
 
 HINSTANCE ghInstance;
 
-char szZipFileName[ MAX_PATH ] = "",
-                                 szEXEOutPath[ MAX_PATH ] = "",
-                                                            szIconPath[ MAX_PATH ] = "",
-                                                                                     szTempDir[ MAX_PATH ] = "",
-                                                                                                             szExtractionPath[ MAX_PATH ] = "",
-                                                                                                                                            szPackageName[ 255 ] = "",
-                                                                                                                                                                   szExecuteCommand[ MAX_PATH ] = "",
-                                                                                                                                                                                                  szURL[ 255 ] = "",
-                                                                                                                                                                                                                 szConfirmMessage[ 1024 ] = "",
-                                                                                                                                                                                                                                            szAuthor[ 255 ] = "",
-                                                                                                                                                                                                                                                              szIntroText[ 1024 ],
-                                                                                                                                                                                                                                                              szINIPath[ MAX_PATH ] = "",
-                                                                                                                                                                                                                                                                                      szShortcut[ 10240 ] = "",
-                                                                                                                                                                                                                                                                                                            szTargetDirectory[ MAX_PATH ];
+char szZipFileName[ MAX_PATH ] = "";
+char szEXEOutPath[ MAX_PATH ] = "";
+char szIconPath[ MAX_PATH ] = "";
+char szTempDir[ MAX_PATH ] = "";
+char szExtractionPath[ MAX_PATH ] = "";
+char szPackageName[ 255 ] = "";
+char szExecuteCommand[ MAX_PATH ] = "";
+char szURL[ 255 ] = "";
+char szConfirmMessage[ 1024 ] = "";
+char szIntroText[ 1024 ];
+char szINIPath[ MAX_PATH ] = "";
+char szShortcut[ 10240 ] = "";
+char szTargetDirectory[ MAX_PATH ];
 
-int iZipFileSize,
-iCurrentPage = 1;
+int iCurrentPage = 1;
 
-BOOL bAutoExtract = FALSE,
-                    bOpenFolder = FALSE,
-                                  bDeleteFiles = FALSE,
-                                                 bNoGUI = FALSE,
-                                                          bChangeIcon = FALSE,
-                                                                        isDebug = FALSE;
+BOOL bRunElevated = FALSE;
+BOOL bSubsystem64 = FALSE;
+BOOL bAutoExtract = FALSE;
+BOOL bOpenFolder = FALSE;
+BOOL bDeleteFiles = FALSE;
+BOOL bNoGUI = FALSE;
+BOOL bChangeIcon = FALSE;
+BOOL isDebug = FALSE;
 
-LPVOID IoBuffer;
-
-char szActiveFont[ 255 ] = "";
+char szActiveFont[ LF_FACESIZE ];
 int iFontSize;
 
 
@@ -168,8 +159,8 @@ int iFontSize;
 */
 #ifndef _CONSOLE
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow );
-BOOL CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
-BOOL CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
+INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
+INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
 #endif
 
 
@@ -190,42 +181,13 @@ void CleanUp()
    if ( hFile != NULL ) CloseHandle( hFile );
 
 #ifdef _WIZARD_
-   if ( h_ExtractThread ) CloseHandle ( h_ExtractThread );
+   if ( hExtractThread ) CloseHandle ( hExtractThread );
 #endif // _WIZARD_
 
 #endif // _CONSOLE
 
    ExitProcess( 1 );
 }
-
-
-
-
-
-/*
- 
-   WriteConsoleOut
- 
-   A printf replacement; helps removes dependancy on MSVCRT.dll for console apps
- 
-*/
-#ifdef _CONSOLE
-int WriteConsoleOut( const char * format, ... )
-{
-   char szBuff[ 8096 ];
-   int retValue;
-   DWORD cbWritten;
-   va_list argptr;
-
-   va_start( argptr, format );
-   retValue = wvsprintf( szBuff, format, argptr );
-   va_end( argptr );
-
-   WriteFile( GetStdHandle( STD_OUTPUT_HANDLE ), szBuff, retValue, &cbWritten, 0 );
-
-   return retValue;
-}
-#endif
 
 
 /*
@@ -266,29 +228,6 @@ void RaiseError( LPTSTR szTheErrorText )
 
 /*
  
-   ShowAboutBox
- 
-   Shows the about box.
- 
-*/
-#ifndef _CONSOLE
-void ShowAboutBox()
-{
-   MessageBox( NULL,
-               "FreeExtractor - "VERSIONDATE
-               "\n"WEBSITE_URL
-               "\n\nWritten by Andrew Fawcett (andrewfawcett@users.sourceforge.net).\n"
-               , "About FreeExtractor", 0 );
-
-}
-#endif // _CONSOLE
-
-
-
-
-
-/*
- 
    LoadDialog
  
    Loads a client dialog into IDD_TEMPLATE
@@ -315,26 +254,21 @@ void LoadDialog( int Resource )
    Formats a static text control that needs a white background (e.g. the splash screen)
  
 */
-int FormatControl( HWND handle, HDC hDC, LONG lFontWeight, LONG lFontHeight, COLORREF FontColor, LPTSTR szFontFace, BOOL Underline, int iBackgroundMode, int StockObject )
+INT_PTR FormatControl( HFONT *phf, HWND handle, HDC hDC, LONG lFontWeight, LONG lFontHeight, COLORREF FontColor, LPTSTR szFontFace, BOOL Underline, int iBackgroundMode, int StockObject )
 {
-   LOGFONT lfTemp;
-   static HFONT hfTemp;
-
-   GetObject( GetWindowFont( handle ), sizeof( lfTemp ), &lfTemp );
-   lfTemp.lfWeight = lFontWeight;
-   lfTemp.lfHeight = lFontHeight;
-   lfTemp.lfUnderline = Underline;
-
-   lstrcpy( lfTemp.lfFaceName, szFontFace );
-
-   hfTemp = CreateFontIndirect( &lfTemp );
-
-   SelectObject( hDC, hfTemp );
+   LOGFONT lf;
+   if ( ( *phf == NULL ) && GetObject( GetWindowFont( handle ), sizeof lf, &lf ) )
+   {
+      lf.lfWeight = lFontWeight;
+      lf.lfHeight = lFontHeight;
+      lf.lfUnderline = Underline;
+      lstrcpy( lf.lfFaceName, szFontFace );
+      *phf = CreateFontIndirect( &lf );
+   }
+   SelectObject( hDC, *phf );
    SetBkMode( hDC, iBackgroundMode );
    SetTextColor( hDC, FontColor );
-   DeleteObject( hfTemp );
-
-   return ( int ) GetStockObject( StockObject );
+   return (INT_PTR) GetStockObject( StockObject );
 }
 
 
@@ -345,30 +279,25 @@ int FormatControl( HWND handle, HDC hDC, LONG lFontWeight, LONG lFontHeight, COL
    Sets the font and size of a static text control.
  
 */
-void FormatText( HWND handle, LPTSTR szFontName, int iFontSize, BOOL bIsBold )
+void FormatText( HFONT *phf, HWND handle, LPTSTR szFontName, int iFontSize, BOOL bIsBold )
 {
-   LOGFONT lf = {0};
-
    HDC hDC = GetDC( handle );
-
    if ( hDC )
    {
-      HFONT hfontNew;
-
-      GetObject( GetWindowFont( handle ), sizeof( lf ), &lf );
-      lf.lfWeight = FW_REGULAR;
-      lf.lfHeight = ( LONG ) iFontSize;
-      if ( bIsBold ) lf.lfWeight = FW_BOLD;
-      lstrcpy( lf.lfFaceName, szFontName );
-
-      hfontNew = CreateFontIndirect( &lf );
-
-      if ( hfontNew )
+      LOGFONT lf;
+      if ( ( *phf == NULL ) && GetObject( GetWindowFont( handle ), sizeof lf, &lf ) )
+      {
+         lf.lfWeight = FW_REGULAR;
+         lf.lfHeight = ( LONG ) iFontSize;
+         if ( bIsBold ) lf.lfWeight = FW_BOLD;
+         lstrcpy( lf.lfFaceName, szFontName );
+         *phf = CreateFontIndirect( &lf );
+      }
+      if ( *phf )
       {
          SetBkMode( hDC, OPAQUE );     //TRANSPARENT
-         SendMessage( handle, WM_SETFONT, ( WPARAM ) hfontNew, TRUE );
+         SendMessage( handle, WM_SETFONT, ( WPARAM ) *phf, TRUE );
       }
-
       ReleaseDC( handle, hDC );
    }
 }
@@ -404,7 +333,7 @@ void __cdecl WinMainCRTStartup( void )
 
    if ( *lpszCommandLine == '"' )
    {
-      while ( *lpszCommandLine && ( *lpszCommandLine != '"' ) ) lpszCommandLine++;
+      do ++lpszCommandLine; while ( *lpszCommandLine && ( *lpszCommandLine != '"' ) );
       if ( *lpszCommandLine == '"' ) lpszCommandLine++;
    }
    else while ( *lpszCommandLine > ' ' ) lpszCommandLine++;
@@ -433,197 +362,43 @@ void __cdecl WinMainCRTStartup( void )
 
 
 /*
- 
-   left
- 
-   Port of the Visual Basic function of the same name.
- 
+   lstrstr
+
+   Finds a substring in str1
+
 */
-char *left( char *in, int size )
-{
-   int i;
-   char *buf2 = ( char * ) VirtualAlloc( NULL, ( size * sizeof( char ) ) + 1, MEM_COMMIT, PAGE_READWRITE );
-
-   for ( i = 0; i < size && in[ i ] != '\0' ; i++ ) buf2[ i ] = in[ i ];
-   buf2[ i++ ] = '\0';
-
-   return buf2;
-}
-
-
-/*
- 
-   right
- 
-   Port of the Visual Basic function of the same name.
- 
-*/
-char *right( char *in, int size )
-{
-   char * p = in;
-
-   int tl = lstrlen( in ) ;
-
-   size = tl - size;
-
-   while ( *p && size > 0 )
-   {
-      p++;
-      size--;
-   }
-
-   return p;
-}
-
-
-/*
- 
-   instr ("In String")
- 
-   Port of the Visual Basic function of the same name.
- 
-*/
-int instr( int offset, char *src, char *query )
-{
-   char * s1, *s2;
-
-   int c;
-
-   if ( !*query ) return 0;
-   if ( offset > lstrlen( src ) ) return 0;
-   if ( offset < 0 ) offset = 0;
-
-   c = offset;
-
-   while ( c > 0 )
-   {
-      src++;
-      c--;
-   }
-
-   while ( *src )
-   {
-      s1 = src;
-      s2 = ( char * ) query;
-
-      while ( *s1 && *s2 && !( *s1 - *s2 ) ) s1++, s2++;
-
-      if ( !*s2 ) break;
-      c++;
-      src++;
-   }
-
-   offset += c + 1;
-
-   if ( !*src || offset < 0 ) return 0;
-
-   return offset;
-}
-
-
-/*
- 
-   mid
- 
-   Port of the Visual Basic function of the same name.
- 
-*/
-char *mid( char *c, int offset, int len )
-{
-   char * p = c;
-
-   while ( offset - 1 > 0 )
-   {
-      *p++;
-      --offset;
-   }
-   return left( p, len );
-}
-
-
-
-
-/*
- 
-   ltrim (Left Trim)
- 
-   Port of the Visual Basic function of the same name.
- 
-*/
-char *ltrim( char *in )
-{
-   char * buf = in;
-
-   for ( NULL; *buf && IsSpace( *buf ); buf++ );
-   return buf;
-}
-
-
-/*
- 
-   rtrim
- 
-   Port of the Visual Basic function of the same name.
- 
-*/
-char *rtrim( char *in )
-{
-   int i = lstrlen( in );
-
-   if ( in ) while ( --i >= 0 ) if ( !IsSpace( in[ i ] ) ) break;
-
-   return left( in, ++i );
-}
-
-
-/*
- 
-   trim
- 
-   Port of the Visual Basic function of the same name.
- 
-*/
-char *trim( char *in )
-{
-   in = ltrim( in );
-   return rtrim( in );
-}
-
-
-
 
 char *lstrstr( const char * str1, const char * str2 )
 {
-   char * cp = ( char * ) str1;
-   char *s1, *s2;
+   const char *cp = str1;
 
    if ( !*str2 )
-      return ( ( char * ) str1 );
+      return ( char * ) str1;
 
    while ( *cp )
    {
-      s1 = cp;
-      s2 = ( char * ) str2;
+      const char *s1 = cp;
+      const char *s2 = str2;
 
-      while ( *s1 && *s2 && !( *s1 - *s2 ) )
+      while ( *s1 && *s2 && *s1 == *s2 )
          s1++, s2++;
 
       if ( !*s2 )
-         return ( cp );
+         return ( char * ) cp;
 
       cp++;
    }
 
-   return ( NULL );
+   return NULL;
 }
 
 
 
 /*
    strnsub
- 
+
    Replaces a substring in pszString
- 
+
 */
 char *strnsub( char *pszString, char *pszPattern, char *pszReplacement, int iMaxLength )
 {
@@ -675,54 +450,40 @@ char *strnsub( char *pszString, char *pszPattern, char *pszReplacement, int iMax
 
 
 /*
-   lstrcmpCI
- 
-   Case-insensitive string compare.
-*/
-int lstrcmpCI( const char* fileName1, const char* fileName2 )
-{
-   for ( ; ; )
-   {
-      char c1 = *( fileName1++ );
-      char c2 = *( fileName2++ );
-      if ( ( c1 >= 'a' ) && ( c1 <= 'z' ) ) c1 -= 0x20;
-      if ( ( c2 >= 'a' ) && ( c2 <= 'z' ) ) c2 -= 0x20;
-      if ( c1 == '\0' ) return ( ( c2 == '\0' ) ? 0 : -1 );
-      if ( c2 == '\0' ) return 1;
-      if ( c1 < c2 ) return -1;
-      if ( c1 > c2 ) return 1;
-   }
-}
-
-
-/*
  
    gettoken
  
    Retrieves the tokennum-th token in string in, delimited by delimiter.
  
 */
-char *gettoken( char *in, char *delimiter, int tokennum )
+char *gettoken( char *in, char *delimiter, int tokennum, char *out )
 {
-   char * p = in;
-   int curpos = 0;
-   int endpos = 0;
+   char *curpos = in;
+   char *endpos;
+   int len = lstrlen( in );
 
-   if ( tokennum > lstrlen( in ) ) return "";
+   *out = '\0';
+
+   if ( tokennum > len ) return "";
 
    while ( tokennum > 0 )
    {
-      curpos = instr( curpos, p, delimiter );
+      curpos = lstrstr( curpos, delimiter );
       if ( !curpos ) return "";
       --tokennum;
+      ++curpos;
    }
-   curpos++;
 
-   endpos = instr( curpos, p, delimiter );
+   endpos = lstrstr( curpos, delimiter );
 
-   if ( endpos <= 0 ) return "";
+   if ( !endpos )
+   {
+      endpos = in + len;
+      delimiter = "";
+   }
 
-   return mid( in, curpos, endpos - curpos );
+   lstrcpyn( out, curpos, (int) (endpos - curpos) + 1 );
+   return delimiter;
 }
 
 
@@ -761,8 +522,22 @@ char *lstrrev( char *str )
    return str;
 }
 
-
-
+/*
+ 
+   IsExtension
+ 
+*/
+BOOL IsExtension(char *exec, char *exten)
+{
+   char *p = exten + lstrlen(exten);
+   char *q = *exec == '"' ? lstrstr( exec + 1, "\"" ) : exec + lstrlen(exec);
+   while ((p > exten) && (q > exec))
+   {
+      if ((*--p & ~0x20) != (*--q & ~0x20))
+         return FALSE;
+   }
+   return (p == exten) && (q > exec) && (*--q == '.');
+}
 
 /*
  
@@ -798,27 +573,6 @@ BOOL DirectoryExists( LPTSTR szDirName )
    return FALSE;
 }
 
-
-
-/*
- 
-   GetFolderFromPath
- 
-   Given a path, extract the folder name (remove the filename, if any)
- 
-*/
-void GetFolderFromPath( char *in, char *out )
-{
-   int slashpos = 0;
-
-   lstrcpy( out, lstrrev( in ) );
-   slashpos = instr( 0, out, "\\" );
-   lstrcpy( out, lstrrev( out ) );
-   lstrcpy( out, left( out, lstrlen( out ) - slashpos ) );
-   lstrrev( in );
-}
-
-
 /*
  
    queryShellFolders
@@ -840,7 +594,6 @@ void queryShellFolders( char *name, char *out )
 }
 #endif // _GETVERSION_
 
-
 /*
  
    DoesFontExist
@@ -849,16 +602,17 @@ void queryShellFolders( char *name, char *out )
  
 */
 #ifndef _GETVERSION_
+int CALLBACK FontEnumProc(LOGFONT const *lplf, void const *lptm, DWORD dwStyle, LPARAM lParam)
+{
+   return 0xC00L;
+}
+
 BOOL DoesFontExist ( LPTSTR szName )
 {
-   char buf[ MAX_PATH ] = "";
-
-   queryShellFolders( "Fonts", buf );
-   lstrcat( buf, "\\" );
-   lstrcat( buf, szName );
-   lstrcat( buf, ".ttf" );
-
-   return FileExists( buf );
+   HDC hdc = GetDC(NULL);
+   int found = EnumFontFamilies(hdc, szName, FontEnumProc, 0);
+   ReleaseDC(NULL, hdc);
+   return found == 0xC00L;
 }
 #endif // _GETVERSION_
 
@@ -871,185 +625,159 @@ BOOL DoesFontExist ( LPTSTR szName )
  
 */
 #ifdef _HEADER_
-char *ParsePath( char *input )
+void ParsePath( char *input )
 {
-   int iToken = 0, i = 0;
+   int tokennum = 0;
+   char *delimiter;
 
-   BOOL bIsFolder = TRUE;
-
-   char szExpandedInput[ MAX_PATH ] = "",
-                                      szCurToken[ MAX_PATH ] = "",
-                                                               szTempDir[ MAX_PATH ] = "",
-                                                                                       szTempINIFile[ MAX_PATH ] = "",
-                                                                                                                   szExpandDefaultPath[ MAX_PATH ] = "";
-
-   char *output = ( char * ) VirtualAlloc( NULL, ( MAX_PATH * sizeof( char ) ) + 1, MEM_COMMIT, PAGE_READWRITE );
-
-   if ( left( input, 1 ) == "\\" )
-   {
-      bIsFolder = TRUE;
-   }
-   else
-   {
-      bIsFolder = FALSE;
-      lstrcat( input, "\\" );
-   }
+   char szExpandedInput[ MAX_PATH ] = "";
+   char szCurToken[ MAX_PATH ] = "";
+   char output[ MAX_PATH ] = "";
 
    //
    // Replace all occurances of a dollar sign with a percent sign
    //
-   while ( instr( 0, input, "$" ) )
+   while ( lstrstr( input, "$" ) )
       strnsub( input, "$", "%", MAX_PATH );
 
-   ExpandEnvironmentStrings( ( LPCTSTR ) input, ( LPTSTR ) szExpandedInput, MAX_PATH );
+   ExpandEnvironmentStrings( input, szExpandedInput, MAX_PATH );
 
-   while ( TRUE )
+   do
    {
       //
       // Get the next token (delimited by a '\')
       //
-      lstrcpy( szCurToken, gettoken( szExpandedInput, "\\", iToken ) );
+      delimiter = gettoken( szExpandedInput, "\\", tokennum++, szCurToken );
 
-      if ( lstrcmpCI( szCurToken, "" ) != 0 )
+      //
+      // Start Menu (for this user)
+      //
+      if ( !lstrcmpi( szCurToken, "%startmenu%" ) )
       {
-         //
-         // Start Menu (for this user)
-         //
-         if ( !lstrcmpCI( szCurToken, "%startmenu%" ) )
-         {
-            char buf[ MAX_PATH ] = "";
-            queryShellFolders( "Programs", buf );
-            lstrcpy( output, buf );
-         }
-
-         //
-         // Desktop
-         //
-         else if ( !lstrcmpCI( szCurToken, "%desktop%" ) )
-         {
-            char buf[ MAX_PATH ];
-            queryShellFolders( "Desktop", buf );
-            lstrcpy( output, buf );
-         }
-
-         //
-         // Sendto Directory
-         //
-         else if ( !lstrcmpCI( szCurToken, "%sendto%" ) )
-         {
-            char buf[ MAX_PATH ];
-            queryShellFolders( "SendTo", buf );
-            lstrcpy( output, buf );
-         }
-
-         //
-         // Favorites
-         //
-         else if ( !lstrcmpCI( szCurToken, "%favorites%" ) )
-         {
-            char buf[ MAX_PATH ];
-            queryShellFolders( "Favorites", buf );
-            lstrcpy( output, buf );
-         }
-
-         //
-         // Start Up Folder in the Start Menu for this user
-         //
-         else if ( !lstrcmpCI( szCurToken, "%startup%" ) )
-         {
-            char buf[ MAX_PATH ];
-            queryShellFolders( "Startup", buf );
-            lstrcpy( output, buf );
-         }
-
-         //
-         // Output directory
-         //
-         else if ( !lstrcmpCI( szCurToken, "%targetdir%" ) )
-         {
-            lstrcpy( output, szTargetDirectory );
-         }
-
-         //
-         // Current Directory
-         //
-         else if ( !lstrcmpCI( szCurToken, "%curdir%" ) )
-         {
-            char buf[ MAX_PATH ];
-            GetCurrentDirectory( MAX_PATH, buf );
-            lstrcpy( output, buf );
-         }
-
-         //
-         // Quicklaunch directory: If the OS doesn't support
-         // it, this defaults to the temp dir.
-         //
-         else if ( !lstrcmpCI( szCurToken, "%quicklaunch%" ) )
-         {
-            char buf[ MAX_PATH ] = "";
-            queryShellFolders( "AppData", buf );
-
-            if ( lstrlen( buf ) > 0 )
-            {
-               lstrcat( buf, "\\Microsoft\\Internet Explorer\\Quick Launch" );
-            }
-
-            if ( !DirectoryExists( buf ) )
-            {
-               GetTempPath( MAX_PATH, buf );
-            }
-            lstrcpy( output, buf );
-         }
-
-         //
-         // Program Files Directory
-         //
-         else if ( !lstrcmpCI( szCurToken, "%programfiles%" ) )
-         {
-            HKEY hKey;
-            char buf[ MAX_PATH ];
-
-            lstrcpy( buf, "C:\\Program Files" );
-            if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", 0, KEY_READ, &hKey ) == ERROR_SUCCESS )
-            {
-               int l = sizeof( buf );
-               int t = REG_SZ;
-               RegQueryValueEx( hKey, "ProgramFilesDir", NULL, &t, buf, &l );
-               RegCloseKey( hKey );
-            }
-            lstrcpy( output, buf );
-         }
-
-         //
-         // System Directory
-         //
-         else if ( !lstrcmpCI( szCurToken, "%sysdir%" ) )
-         {
-            char buf[ MAX_PATH ];
-            GetSystemDirectory( buf, MAX_PATH );
-            lstrcpy( output, buf );
-         }
-
-         //
-         // The token isn't a variable, so append it.
-         //
-         else
-         {
-            lstrcat( output, szCurToken );
-         }
-         lstrcat( output, "\\" );
+         char buf[ MAX_PATH ] = "";
+         queryShellFolders( "Programs", buf );
+         lstrcpy( output, buf );
       }
-      else break;
 
-      iToken++;
-   }
+      //
+      // Desktop
+      //
+      else if ( !lstrcmpi( szCurToken, "%desktop%" ) )
+      {
+         char buf[ MAX_PATH ];
+         queryShellFolders( "Desktop", buf );
+         lstrcpy( output, buf );
+      }
 
-   if ( !bIsFolder )
-   {
-      lstrcpy( output, left( output, lstrlen( output ) - 1 ) );
-   }
+      //
+      // Sendto Directory
+      //
+      else if ( !lstrcmpi( szCurToken, "%sendto%" ) )
+      {
+         char buf[ MAX_PATH ];
+         queryShellFolders( "SendTo", buf );
+         lstrcpy( output, buf );
+      }
 
-   return output;
+      //
+      // Favorites
+      //
+      else if ( !lstrcmpi( szCurToken, "%favorites%" ) )
+      {
+         char buf[ MAX_PATH ];
+         queryShellFolders( "Favorites", buf );
+         lstrcpy( output, buf );
+      }
+
+      //
+      // Start Up Folder in the Start Menu for this user
+      //
+      else if ( !lstrcmpi( szCurToken, "%startup%" ) )
+      {
+         char buf[ MAX_PATH ];
+         queryShellFolders( "Startup", buf );
+         lstrcpy( output, buf );
+      }
+
+      //
+      // Output directory
+      //
+      else if ( !lstrcmpi( szCurToken, "%targetdir%" ) )
+      {
+         lstrcpy( output, szTargetDirectory );
+      }
+
+      //
+      // Current Directory
+      //
+      else if ( !lstrcmpi( szCurToken, "%curdir%" ) )
+      {
+         char buf[ MAX_PATH ];
+         GetCurrentDirectory( MAX_PATH, buf );
+         lstrcpy( output, buf );
+      }
+
+      //
+      // Quicklaunch directory: If the OS doesn't support
+      // it, this defaults to the temp dir.
+      //
+      else if ( !lstrcmpi( szCurToken, "%quicklaunch%" ) )
+      {
+         char buf[ MAX_PATH ] = "";
+         queryShellFolders( "AppData", buf );
+
+         if ( lstrlen( buf ) > 0 )
+         {
+            lstrcat( buf, "\\Microsoft\\Internet Explorer\\Quick Launch" );
+         }
+
+         if ( !DirectoryExists( buf ) )
+         {
+            GetTempPath( MAX_PATH, buf );
+         }
+         lstrcpy( output, buf );
+      }
+
+      //
+      // Program Files Directory
+      //
+      else if ( !lstrcmpi( szCurToken, "%programfiles%" ) )
+      {
+         HKEY hKey;
+         char buf[ MAX_PATH ];
+
+         lstrcpy( buf, "C:\\Program Files" );
+         if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", 0, KEY_READ, &hKey ) == ERROR_SUCCESS )
+         {
+            int l = sizeof( buf );
+            int t = REG_SZ;
+            RegQueryValueEx( hKey, "ProgramFilesDir", NULL, &t, buf, &l );
+            RegCloseKey( hKey );
+         }
+         lstrcpy( output, buf );
+      }
+
+      //
+      // System Directory
+      //
+      else if ( !lstrcmpi( szCurToken, "%sysdir%" ) )
+      {
+         char buf[ MAX_PATH ];
+         GetSystemDirectory( buf, MAX_PATH );
+         lstrcpy( output, buf );
+      }
+
+      //
+      // The token isn't a variable, so append it.
+      //
+      else
+      {
+         lstrcat( output, szCurToken );
+      }
+      lstrcat( output, delimiter );
+   } while ( *delimiter );
+
+   lstrcpy( input, output );
 }
 #endif //_HEADER_
 
@@ -1064,42 +792,50 @@ char *ParsePath( char *input )
 */
 BOOL CreateDirectoryRecursively( LPTSTR szPath )
 {
+   int tokennum = 0;
+   char *delimiter = NULL;
+
    char szFullPath[ MAX_PATH + 3 ] = "";
    char szTempPath[ MAX_PATH + 3 ] = "";
-   char *curtoken;
-   int tokennum = 0;
-   BOOL successful;
+   char szCurToken[ MAX_PATH + 3 ] = "";
 
-   GetFullPathName( szPath, MAX_PATH, szFullPath, NULL );
-   lstrcat( szFullPath, "\\" );
+   BOOL successful = TRUE;
 
-   while ( TRUE )
+   GetFullPathName( szPath, MAX_PATH, szFullPath, &delimiter );
+   if (delimiter)
+      *delimiter = '\0';
+
+   if ( !DirectoryExists( szFullPath ) ) do
    {
-      curtoken = gettoken( szFullPath, "\\", tokennum );
-      if ( !lstrlen( curtoken ) ) break;
-
-      if ( lstrlen ( szTempPath ) == 0 )
-      {
-         lstrcpy( szTempPath, curtoken );
-         lstrcat( szTempPath, "\\" );
-      }
-      else
-      {
-         lstrcat( szTempPath, curtoken );
-         lstrcat( szTempPath, "\\" );
-      }
+      delimiter = gettoken( szFullPath, "\\", tokennum++, szCurToken );
+      lstrcat( szTempPath, szCurToken );
+      lstrcat( szTempPath, delimiter );
 
       GetFullPathName( szTempPath, MAX_PATH, szTempPath, NULL );
 
-      if ( !DirectoryExists( szTempPath ) ) successful = CreateDirectory( szTempPath, NULL );
-
-      tokennum++;
-   }
+      if ( !DirectoryExists( szTempPath ) )
+         successful = CreateDirectory( szTempPath, NULL );
+   } while ( *delimiter );
 
    return successful;
 }
 
-void *memcpy ( void * dst, const void * src, size_t count )
+
+#ifndef _CONSOLE
+void *memset( void * dst, int value, size_t count )
+{
+   void * ret = dst;
+
+   while ( count-- )
+   {
+      *( char * ) dst = ( char ) value;
+      dst = ( char * ) dst + 1;
+   }
+
+   return ( ret );
+}
+
+void *memcpy( void * dst, const void * src, size_t count )
 {
    void * ret = dst;
 
@@ -1113,7 +849,7 @@ void *memcpy ( void * dst, const void * src, size_t count )
    return ( ret );
 }
 
-int memcmp ( const void * buf1, const void * buf2, size_t count )
+int memcmp( const void * buf1, const void * buf2, size_t count )
 {
    if ( !count ) return ( 0 );
 
@@ -1125,6 +861,7 @@ int memcmp ( const void * buf1, const void * buf2, size_t count )
 
    return ( *( ( unsigned char * ) buf1 ) - *( ( unsigned char * ) buf2 ) );
 }
+#endif
 
 
 /*
@@ -1177,15 +914,26 @@ void replace_data( char *hdr, int hdr_len, char *srch, int srchlen, char *filena
 */
 #ifndef _GETVERSION_
 #ifndef _HEADER_
-void Build()
+DWORD CALLBACK Build( void *dummy )
 {
    HANDLE hFEHeaderOut, hSourceZip;
-   //   HKEY hKey;
+   LPVOID IoBuffer;
 
-   char szINIFileContents[ 4096 ], szAuthor[ 64 ];
-   int iINIFileSize, i = 0;
+   char szINIFileContents[ 16384 ];
+   int iINIFileSize;
+   int iZipFileSize;
+   int i = 0;
    DWORD dwDummy, dwBytesRead, dwBytesWritten;
 
+   HRSRC const hICON = FindResource(NULL, "setup.ico", RT_RCDATA);
+   char* const pchICON = (char*)LoadResource(NULL, hICON);
+   DWORD const cchICON = SizeofResource(NULL, hICON);
+   HRSRC const hSTUB = FindResource(NULL, bSubsystem64 ?
+      (bRunElevated ? "header64_elevated.exe" : "header64.exe") :
+      (bRunElevated ? "header32_elevated.exe" : "header32.exe"),
+      RT_RCDATA);
+   char* const pchSTUB = (char*)LoadResource(NULL, hSTUB);
+   DWORD const cchSTUB = SizeofResource(NULL, hSTUB);
 
    //
    // Read source zip file
@@ -1205,7 +953,7 @@ void Build()
    //
    if ( bChangeIcon )
    {
-      replace_data( ( char* ) STUB, sizeof( STUB ), ( char* ) ICON, sizeof( ICON ), szIconPath );
+      replace_data( pchSTUB, cchSTUB, pchICON, cchICON, szIconPath );
    }
 
    //
@@ -1219,7 +967,7 @@ void Build()
                               0,
                               NULL );
 
-   WriteFile( hFEHeaderOut, STUB, sizeof( STUB ), &dwDummy, NULL );
+   WriteFile( hFEHeaderOut, pchSTUB, cchSTUB, &dwDummy, NULL );
 
 
    //
@@ -1232,7 +980,7 @@ void Build()
    //
    while ( szIntroText[ i ] != '\0' )
    {
-      if ( ( ( char ) szIntroText[ i ] == 0x0D ) && ( ( char ) szIntroText[ i + 1 ] == 0x0A ) )
+      if ( ( szIntroText[ i ] == 0x0D ) && ( szIntroText[ i + 1 ] == 0x0A ) )
       {
          szIntroText[ i ] = '\\';
          szIntroText[ i + 1 ] = 'n';
@@ -1240,26 +988,6 @@ void Build()
       i++;
    }
 
-   //
-   // Embed the author name. Read it from the registry.
-   //
-   /*
-      if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_READ, &hKey ) == ERROR_SUCCESS )
-      {
-         int l = MAX_PATH;
-         int t = REG_SZ;
-         RegQueryValueEx( hKey, "RegisteredOwner", NULL, &t, szAuthor, &l );
-         RegCloseKey( hKey );
-      }
-    
-      if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", 0, KEY_READ, &hKey ) == ERROR_SUCCESS )
-      {
-         int l = MAX_PATH;
-         int t = REG_SZ;
-         RegQueryValueEx( hKey, "RegisteredOwner", NULL, &t, szAuthor, &l );
-         RegCloseKey( hKey );
-      }
-   */
    iZipFileSize = GetFileSize( hSourceZip, NULL );
 
 
@@ -1270,28 +998,27 @@ void Build()
              "[FE]\n"
              "Name=%s\n"
              "ZipSize=%d\n"
-             "Exec=%s\n"
+             "Exec=\"%s\"\n"
              "DefaultPath=%s\n"
              "Intro=%s\n"
-             "URL=%s\n"
-             "Author=%s\n",
+             "URL=%s\n",
              szPackageName, iZipFileSize,
              szExecuteCommand, szExtractionPath,
-             szIntroText, szURL, szAuthor );
+             szIntroText, szURL );
 
    if ( bAutoExtract ) lstrcat( szINIFileContents, "AutoExtract=1\n" );
    if ( bOpenFolder ) lstrcat( szINIFileContents, "OpenFolder=1\n" );
    if ( bDeleteFiles ) lstrcat( szINIFileContents, "Delete=1\n" );
    if ( bNoGUI ) lstrcat( szINIFileContents, "NoGUI=1\n" );
    //if ( isDebug ) lstrcat( szINIFileContents, "Debug=1\n" );          // not used yet.
-   if ( lstrlen( szShortcut ) > 0 ) lstrcat( szINIFileContents, szShortcut );
+   lstrcat( szINIFileContents, szShortcut );
    iINIFileSize = lstrlen( szINIFileContents );
 
 
    //
    // Write the metadata out
    //
-   WriteFile( hFEHeaderOut, ( LPVOID ) szINIFileContents, iINIFileSize, &dwDummy, NULL );
+   WriteFile( hFEHeaderOut, szINIFileContents, iINIFileSize, &dwDummy, NULL );
 
 
    //
@@ -1322,6 +1049,7 @@ void Build()
 #ifndef _MAKESFX_
    PostMessage( hwndMain, WM_COMMAND, IDC_NEXT, 0 );
 #endif // _MAKESFX_
+   return 0;
 }
 
 #endif // _HEADER_
@@ -1335,7 +1063,7 @@ void Build()
  
    Remove all instances of a double slash.
 */
-char *CleanPath( char *szPath )
+void CleanPath( char *szPath )
 {
    BOOL bIsUNCPath = FALSE;
    int offset = 0;
@@ -1344,12 +1072,12 @@ char *CleanPath( char *szPath )
    //
    // Handle UNC paths.
    //
-   if ( szPath[ 0 ] == szPath[ 1 ] == 0x5C ) bIsUNCPath = TRUE;
+   if ( szPath[ 0 ] == 0x5C && szPath[ 1 ] == 0x5C ) bIsUNCPath = TRUE;
 
    //
    // Replaces all occurances of a double slash with a single.
    //
-   while ( instr( 0, szPath, "\\\\" ) )
+   while ( lstrstr( szPath, "\\\\" ) )
    {
       strnsub( szPath, "\\\\", "\\", MAX_PATH );
    }
@@ -1361,14 +1089,8 @@ char *CleanPath( char *szPath )
    {
       strnsub( szPath, "\\", "\\\\", MAX_PATH );
    }
-
-   return szPath;
 }
 
-
-
-
-#define MakePtr( cast, ptr, addValue ) (cast)( (DWORD)(ptr) + (addValue) )
 
 
 
@@ -1386,48 +1108,30 @@ char *CleanPath( char *szPath )
 */
 int ExeType( LPSTR filename )
 {
-   HANDLE hFile;
-   HANDLE hFileMapping;
-   LPVOID lpFileBase;
-   PIMAGE_DOS_HEADER dosHeader;
-
-   hFile = CreateFile( filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
-
-   if ( hFile == INVALID_HANDLE_VALUE ) return 0;
-
-   hFileMapping = CreateFileMapping( hFile, NULL, PAGE_READONLY, 0, 0, NULL );
-
-   if ( hFileMapping == 0 )
+   int type = 0;
+   PIMAGE_DOS_HEADER lpFileBase = NULL;
+   HANDLE hFile = CreateFile( filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
+   if ( hFile != INVALID_HANDLE_VALUE )
    {
-      CloseHandle( hFile );
-      return 0;
-   }
-
-   lpFileBase = MapViewOfFile( hFileMapping, FILE_MAP_READ, 0, 0, 0 );
-
-   if ( lpFileBase == 0 )
-   {
-      CloseHandle( hFileMapping );
-      CloseHandle( hFile );
-      return 0;
-   }
-
-   dosHeader = ( PIMAGE_DOS_HEADER ) lpFileBase;
-
-   if ( dosHeader->e_magic == IMAGE_DOS_SIGNATURE )
-   {
-      PIMAGE_NT_HEADERS pNTHeader;
-      DWORD base = ( DWORD ) dosHeader;
-
-      pNTHeader = MakePtr( PIMAGE_NT_HEADERS, dosHeader, dosHeader->e_lfanew );
-
-      if ( IsBadReadPtr( pNTHeader, sizeof( IMAGE_NT_HEADERS ) ) || pNTHeader->Signature != IMAGE_NT_SIGNATURE )
+      HANDLE hFileMapping = CreateFileMapping( hFile, NULL, PAGE_READONLY, 0, 0, NULL );
+      if ( hFileMapping )
       {
-         return 0;
+         lpFileBase = ( PIMAGE_DOS_HEADER ) MapViewOfFile( hFileMapping, FILE_MAP_READ, 0, 0, 0 );
+         CloseHandle( hFileMapping );
       }
-      else return 1;
+      CloseHandle( hFile );
    }
-
-   return 0;
+   if ( lpFileBase )
+   {
+      if ( lpFileBase->e_magic == IMAGE_DOS_SIGNATURE )
+      {
+         PIMAGE_NT_HEADERS pNTHeader = ( PIMAGE_NT_HEADERS ) ( ( DWORD_PTR ) lpFileBase + lpFileBase->e_lfanew );
+         if ( !IsBadReadPtr( pNTHeader, sizeof( IMAGE_NT_HEADERS ) ) && pNTHeader->Signature == IMAGE_NT_SIGNATURE )
+         {
+            type = 1;
+         }
+      }
+      UnmapViewOfFile(lpFileBase);
+   }
+   return type;
 }
-

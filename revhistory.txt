@@ -1,3 +1,23 @@
+FreeExtractor v1.45, September 8, 2023
+
+   - Convert project files to Visual Studio 2008 and Visual Studio 2015.
+   - Preserve leading and trailing quotation marks in execution command.
+   - Add option to require the SFX to run as administrator.
+   - Add option to run the SFX in the 64-bit subsystem.
+   - FEWIZARD: Remove unchecked options from default.ini to prevent them from surprisingly coming back.
+   - FEWIZARD: Don't let shortcuts from previously created SFXs silently creep into subsequent ones.
+   - SFX: Parse PE headers to find out where the payload starts without scanning memory for a signature.
+   - UI: Prefer Segoe UI font over Tahoma.
+   - UI: Fix cursor flicker when hovering links.
+   - Move SFX stubs and icon to resources to save the need for running them through bin2h.exe.
+   - Adjust some buffer sizes to reduce risk of overflow.
+   - Fix some memory and handle leaks.
+   - Fix some wrong variable types.
+   - Remove some redundant utility functions.
+   - Yet more unnecessary refactorings.
+   - Refrain from UPXing executables to reduce virus alerts.
+   - Remove the HASH2 (I do like the joke though).
+
 FreeExtractor v1.44, March 20, 2001
 
    - When using non-standard dialog sizes, the intro bitmap now correctly scales. (No more ugly white gaps.)

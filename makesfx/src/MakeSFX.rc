@@ -1,0 +1,10 @@
+#include "winresrc.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+setup.ico               RCDATA "..\\..\\header\\res\\setup.ico"
+header32.exe            RCDATA "..\\..\\output\\header32.exe"
+header32_elevated.exe   RCDATA "..\\..\\output\\header32_elevated.exe"
+header64.exe            RCDATA "..\\..\\output\\header64.exe"
+header64_elevated.exe   RCDATA "..\\..\\output\\header64_elevated.exe"

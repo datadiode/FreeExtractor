@@ -9,17 +9,18 @@
 #include "list.h"
 #include "FEHelp.h"
 #include <Htmlhelp.h>
+#include <shlwapi.h>
 
 
-#define SPLASH_PAGE				1
-#define ZIP_PAGE					2
-#define OPTIONS_PAGE				3
+#define SPLASH_PAGE           1
+#define ZIP_PAGE              2
+#define OPTIONS_PAGE          3
 #define ADVANCED_OPTIONS_PAGE 4
 #define SHORTCUT_PAGE         5
 #define ICON_PAGE             6
-#define CONFIRM_PAGE				7
-#define PROGRESS_PAGE			8
-#define FINISHED_PAGE			9
+#define CONFIRM_PAGE          7
+#define PROGRESS_PAGE         8
+#define FINISHED_PAGE         9
 
 
 int iDialogArray[] = { 0,     // 1 based
@@ -71,15 +72,15 @@ List list_Shortcuts;
 
 
 /*
- 
+
    Prototypes (Wizard-specific)
- 
+
 */
 void Open( void );
 void SetConfirmMessage( void );
 void SetDialogPage( int iPageNum );
 void RefreshShortcuts();
-BOOL CALLBACK ShortcutDlgProc ( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
+INT_PTR CALLBACK ShortcutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
 void CheckSaveSettings();
 
 #endif // _wizard_h_

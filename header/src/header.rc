@@ -1,51 +1,8 @@
-//Microsoft Developer Studio generated resource script.
-//
 #include "resource.h"
+#include "winresrc.h"
 
-#define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
-#include "afxres.h"
-
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "#include ""afxres.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -76,11 +33,11 @@ IDD_SPLASH DIALOGEX 0, 0, 331, 193
 STYLE WS_CHILD | WS_VISIBLE
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_INTROBANNER,"Static",SS_SIMPLE | SS_NOPREFIX | 
+    CONTROL         "",IDC_INTROBANNER,"Static",SS_SIMPLE | SS_NOPREFIX |
                     WS_GROUP,117,7,213,16,WS_EX_TRANSPARENT
     LTEXT           "",IDC_SUBBANNER,118,30,208,141,SS_NOPREFIX,
                     WS_EX_TRANSPARENT
-    LTEXT           "",IDC_URL,118,176,207,10,0,WS_EX_TRANSPARENT
+    LTEXT           "",IDC_URL,118,176,207,10,SS_NOTIFY,WS_EX_TRANSPARENT
 END
 
 IDD_PATH DIALOG DISCARDABLE  0, 0, 276, 136
@@ -114,51 +71,12 @@ CAPTION "About FreeExtractor"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "",IDC_TITLE,40,12,158,8
-    LTEXT           "Copyright © 2000-2001 Andrew Fawcett and contributors.\n\nFreeExtractor is free and open source.",
+    LTEXT           "Copyright © 2000-2023 Andrew Fawcett and contributors.\n\nFreeExtractor is free and open source.",
                     IDC_TEXT,40,24,158,43
     DEFPUSHBUTTON   "OK",IDOK,143,84,49,14,WS_GROUP
     LTEXT           "http://www.disoriented.com",IDC_URL,40,73,158,8,
                     SS_NOTIFY
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_TEMPLATE, DIALOG
-    BEGIN
-        BOTTOMMARGIN, 215
-    END
-
-    IDD_SPLASH, DIALOG
-    BEGIN
-        VERTGUIDE, 118
-    END
-
-    IDD_PATH, DIALOG
-    BEGIN
-        HORZGUIDE, 55
-        HORZGUIDE, 59
-    END
-
-    IDD_PROGRESS, DIALOG
-    BEGIN
-        HORZGUIDE, 49
-    END
-
-    IDD_ABOUT, DIALOG
-    BEGIN
-        VERTGUIDE, 40
-        VERTGUIDE, 198
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -173,7 +91,7 @@ IDB_BITMAP1             BITMAP  DISCARDABLE     "..\\res\\box.bmp"
 // Menu
 //
 
-IDR_MENU1 MENU DISCARDABLE 
+IDR_MENU1 MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
@@ -197,18 +115,3 @@ IDC_HAND1               CURSOR  DISCARDABLE     "..\\res\\hand.cur"
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SETUP1              ICON    DISCARDABLE     "..\\res\\setup.ico"
-#endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

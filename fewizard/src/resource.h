@@ -1,7 +1,3 @@
-//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by FEWizard.rc
-//
 #define IDI_SETUP1                      100
 #define IDD_PROGRESS                    101
 #define IDD_ADVOPTIONS                  103
@@ -47,12 +43,13 @@
 #define IDC_OPEN                        1022
 #define IDC_ZIPPATH                     1023
 #define IDC_EXEOUT                      1024
+#define IDC_RUNELEVATED                 1025
 #define IDC_DEFAULT_EXTRACTION_PATH     1026
 #define IDC_AUTOEXTRACT                 1027
 #define IDC_EXEC                        1028
 #define IDC_OPENFOLDER                  1029
 #define IDR_MENU1                       1030
-#define IDC_EXEOUT1                     1031
+#define IDC_SUBSYSTEM64                 1031
 #define IDC_STATUSLABEL                 2000
 #define IDC_CONFIRMMESSAGE              2005
 #define IDC_DESKTOPSHORTCUT             2009
@@ -86,16 +83,3 @@
 #define IDC_TARGETEXAMPLE               2053
 #define IDC_TITLE                       10034
 #define IDM_ABOUT                       40001
-
-// Next default values for new objects
-// 
-#ifdef APSTUDIO_INVOKED
-#ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NO_MFC                     1
-#define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        129
-#define _APS_NEXT_COMMAND_VALUE         40002
-#define _APS_NEXT_CONTROL_VALUE         2054
-#define _APS_NEXT_SYMED_VALUE           175
-#endif
-#endif
