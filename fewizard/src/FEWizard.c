@@ -624,7 +624,7 @@ void SetDialogPage( int iPageNum )
       for ( i = 0 ; i < ListCount( &list_Shortcuts ) ; ++i )
       {
          char szSCToken[ 1024 ];
-         wsprintf( szSCToken, "Shortcut%d=%s|%s|\n", i, ListPeekShortcut( &list_Shortcuts ), ListPeekTarget( &list_Shortcuts ) );
+         wsprintf( szSCToken, "Shortcut=%s|%s|\n", ListPeekShortcut( &list_Shortcuts ), ListPeekTarget( &list_Shortcuts ) );
          lstrcat( szShortcut, szSCToken );
          ListMoveNext( &list_Shortcuts );
       }

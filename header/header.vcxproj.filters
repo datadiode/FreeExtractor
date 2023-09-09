@@ -5,9 +5,6 @@
       <UniqueIdentifier>{6e03e562-a1c9-4538-b42d-22ef3fe03fbf}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
     </Filter>
-    <Filter Include="Source Files\zLib">
-      <UniqueIdentifier>{01eed5af-fa3c-4c0e-bcec-bbc09baf4d33}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{82dacada-26d7-4f19-9d83-7d60b1bf3548}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
@@ -27,74 +24,11 @@
     <ClCompile Include="src\stack.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\zLib\adler32.c">
-      <Filter>Source Files\zLib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\zLib\crc32.c">
-      <Filter>Source Files\zLib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\zLib\infblock.c">
-      <Filter>Source Files\zLib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\zLib\infcodes.c">
-      <Filter>Source Files\zLib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\zLib\inffast.c">
-      <Filter>Source Files\zLib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\zLib\inflate.c">
-      <Filter>Source Files\zLib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\zLib\inftrees.c">
-      <Filter>Source Files\zLib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\zLib\infutil.c">
-      <Filter>Source Files\zLib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\zLib\unzip.c">
-      <Filter>Source Files\zLib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\zLib\zutil.c">
-      <Filter>Source Files\zLib</Filter>
+    <ClCompile Include="src\miniz.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\zLib\deflate.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\infblock.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\infcodes.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\inffast.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\inffixed.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\inftrees.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\infutil.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\trees.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\unzip.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\zconf.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\zlib.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\zLib\zutil.h">
-      <Filter>Source Files\zLib</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\FEcommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -108,6 +42,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\miniz.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

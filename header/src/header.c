@@ -581,6 +581,40 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
 
 
 
+/*
+
+Miniz callbacks
+
+*/
+static size_t file_read_func(void *pOpaque, mz_uint64 file_ofs, void *pBuf, size_t n)
+{
+   HANDLE hFile = (HANDLE)pOpaque;
+   DWORD dw;
+   LARGE_INTEGER li;
+   li.QuadPart = iZipOffset + file_ofs;
+   dw = SetFilePointer(hFile, li.LowPart, &li.HighPart, FILE_BEGIN);
+   if (dw == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+      return 0;
+   if (!ReadFile(hFile, pBuf, (DWORD)n, &dw, NULL))
+      return 0;
+   return dw;
+}
+
+static size_t file_write_func(void *pOpaque, mz_uint64 file_ofs, const void *pBuf, size_t n)
+{
+   HANDLE hFile = (HANDLE)pOpaque;
+   DWORD dw;
+   LARGE_INTEGER li;
+   li.QuadPart = file_ofs;
+   dw = SetFilePointer(hFile, li.LowPart, &li.HighPart, FILE_BEGIN);
+   if (dw == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+      return 0;
+   if (!WriteFile(hFile, pBuf, (DWORD)n, &dw, NULL))
+      return 0;
+   return dw;
+}
+
+
 
 /*
 
@@ -592,248 +626,97 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
 DWORD CALLBACK Extract( void *dummy )
 {
    HWND hProgress;
-   unsigned int i;
-   int err;
-   unzFile uf;
-   char filename_inzip[ MAX_PATH ];
+   unsigned int i, n;
+   char szTempDirBuffer[MAX_PATH * 2];
    char szStatusMessage[ 255 ];
 
-   unz_global_info gi;
-   unz_file_info file_info;
+   mz_zip_archive zip_archive;
+   memset(&zip_archive, 0, sizeof zip_archive);
 
    //
    // Open this self extractor
    //
-   GetFullPathName ( szTargetDirectory, MAX_PATH, szTargetDirectory, NULL );
-   uf = unzOpen( szThisEXE, iZipOffset, iZipSize, szTargetDirectory );
+   GetFullPathName(szTargetDirectory, MAX_PATH, szTargetDirectory, NULL);
 
+   zip_archive.m_pIO_opaque = hFile;
+   zip_archive.m_pRead = file_read_func;
 
    //
    // Attempt to get global (zip) info
    //
-   err = unzGetGlobalInfo ( uf, &gi );
-   if ( err != UNZ_OK ) RaiseError( "Could not read SFX info. It's likely corrupt." );
+   if (!mz_zip_reader_init(&zip_archive, iZipSize, 0))
+      RaiseError("Could not read SFX info. It's likely corrupt.");
 
+   n = mz_zip_reader_get_num_files(&zip_archive);
 
    //
    // Prepare progress bar
    //
-   hProgress = GetDlgItem( hwndStatic, IDC_PROGRESSBAR );
-   SendMessage( hProgress, PBM_SETRANGE, 0, MAKELPARAM( 0, gi.number_entry ) );
-
+   hProgress = GetDlgItem(hwndStatic, IDC_PROGRESSBAR);
+   SendMessage(hProgress, PBM_SETRANGE, 0, MAKELPARAM(0, n));
 
    //
    // Enumerate files
    //
-   for ( i = 0; i < gi.number_entry; i++ )
+   for (i = 0; i < n; ++i)
    {
-      //
-      // Get info about the current file
-      //
-      err = unzGetCurrentFileInfo( uf, &file_info, filename_inzip, sizeof( filename_inzip ), NULL, 0, NULL, 0 );
-
-      if ( err != UNZ_OK )
-         RaiseError( "Could not get file info. This archive is likely corrupted." );
-
+      mz_zip_archive_file_stat file_stat;
+      if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
+         RaiseError("Could not get file info. This archive is likely corrupted.");
 
       //
       // Display which file is being extracted
       //
-      wsprintf( szStatusMessage, "Extracting %s ...", filename_inzip );
-      SetDlgItemText( hwndStatic, IDC_STATUS, szStatusMessage );
-
-
-      //
-      // Do the extraction
-      //
-      if ( ExtractCurrentFile( uf, szTargetDirectory ) != UNZ_OK )
-         RaiseError( "Could not extract the current file." );
-
+      wsprintf(szStatusMessage, "Extracting %s ...", file_stat.m_filename);
+      SetDlgItemText(hwndStatic, IDC_STATUS, szStatusMessage);
 
       //
-      // Push filename on the stack
+      // Append the internal dir name to the target directory and create the full path
       //
-      stkPush( &stk_ExtractedFiles, filename_inzip );
-
-
-      //
-      // If there are more files, move to the next file
-      //
-      if ( ( i + 1 ) < gi.number_entry )
+      wsprintf(szTempDirBuffer, "%s%s", szTargetDirectory, file_stat.m_filename);
+      CleanPath(szTempDirBuffer);
+      CreateDirectoryRecursively(szTempDirBuffer);
+      if (mz_zip_reader_is_file_a_directory(&zip_archive, i))
       {
-         err = unzGoToNextFile( uf );
-         if ( err != UNZ_OK )
-            RaiseError( "Could not get file info. This archive is likely corrupted." );
+         CreateDirectory(szTempDirBuffer, NULL);
       }
+      else
+      {
+         FILETIME ft = { 0, 0 };
+         HANDLE hCurrentFile = CreateFile(szTempDirBuffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+         if (hCurrentFile == INVALID_HANDLE_VALUE)
+            RaiseError("Could not extract the current file.");
 
+         if (!mz_zip_reader_extract_to_callback(&zip_archive, i, file_write_func, hCurrentFile, 0))
+         {
+            SetFilePointer(hCurrentFile, 0, NULL, FILE_BEGIN);
+            SetEndOfFile(hCurrentFile);
+            RaiseError("Could not extract the current file.");
+         }
 
+         LocalFileTimeToFileTime(&file_stat.m_time, &ft);
+         SetFileTime(hCurrentFile, NULL, NULL, &ft);
+         CloseHandle(hCurrentFile);
+      }
       //
       // Increment progress bar
       //
-      SendMessage( hProgress, PBM_SETPOS, i + 1, 0 );
+      SendMessage(hProgress, PBM_SETPOS, i + 1, 0);
    }
 
    //
    // Clean up
    //
-   unzCloseCurrentFile( uf );
-   unzClose( uf );
-
+   mz_zip_reader_end(&zip_archive);
 
    //
    // Look pretty
    //
-   SendMessage( hProgress, PBM_SETPOS, gi.number_entry, 0 );
+   SendMessage( hProgress, PBM_SETPOS, n, 0 );
    Sleep( 300 );
    PostMessage( hwndMain, WM_COMMAND, IDC_NEXT, 0 );
 
    return 0;
-}
-
-
-
-
-
-/*
-
-   ExtractCurrentFile
-
-   Extracts the current file. Taken and modified from Gilles Vollant's MiniUnzip.
-
-*/
-int ExtractCurrentFile( unzFile uf, LPTSTR szTargetDirectory )
-{
-   FILETIME CurrentFileTime;
-   HANDLE hCurrentFile;
-   DWORD dwDummy;
-   char filename_inzip[ MAX_PATH ] = "";
-   char *filename_withoutpath;
-   char *p;
-   int err = UNZ_OK;
-   void *buf;
-
-   LPTSTR szTempFileName = "";
-
-   unz_file_info file_info;
-   uLong ratio = 0;
-
-
-
-   //
-   // Get current file info
-   //
-   err = unzGetCurrentFileInfo( uf, &file_info, filename_inzip, sizeof( filename_inzip ), NULL, 0, NULL, 0 );
-   if ( err != UNZ_OK ) RaiseError( "Could not get file info. This archive is likely corrupted." );
-
-
-   //
-   // Allocate buffer
-   //
-   buf = VirtualAlloc( NULL, BUFFER_SIZE, MEM_COMMIT, PAGE_READWRITE );
-   p = filename_withoutpath = filename_inzip;
-
-
-   //
-   // Extract the actual filename (without internal directory names)
-   //
-   while ( ( *p ) != '\0' )
-   {
-      if ( ( ( *p ) == '/' ) || ( ( *p ) == '\\' ) ) filename_withoutpath = p + 1;
-      p++;
-   }
-
-
-   //
-   // If the internal filename is NULL, it's a directory.
-   //
-   if ( ( *filename_withoutpath ) == '\0' )
-   {
-      char szTempDirBuffer[ MAX_PATH * 2 ];
-
-      //
-      // Append the internal dir name to the target directory and create the full path
-      //
-      wsprintf( szTempDirBuffer, "%s%s", szTargetDirectory, filename_inzip );
-
-      CleanPath( szTempDirBuffer );
-      CreateDirectoryRecursively( szTempDirBuffer );
-
-      return UNZ_OK;
-   }
-   else
-   {
-      char szTempDirBuffer[ MAX_PATH ];
-
-      //
-      // We're dealing with a file
-      //
-      wsprintf( szTempDirBuffer, "%s%s", szTargetDirectory, filename_inzip );
-
-
-      //
-      // Open the current internal file
-      //
-      err = unzOpenCurrentFile( uf );
-      if ( err != UNZ_OK ) RaiseError( "Could not get file info. This archive is likely corrupted." );
-      GetFullPathName( szTempDirBuffer, MAX_PATH, szTempDirBuffer, NULL );
-
-
-      //
-      // Create the output file
-      //
-      CleanPath( szTempDirBuffer );
-      hCurrentFile = CreateFile( szTempDirBuffer, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
-
-
-      //
-      // We couldn't create the output file because it's actually in a directory
-      // that hasn't been created yet. So, create it.
-      //
-      if ( ( hCurrentFile == INVALID_HANDLE_VALUE ) && ( filename_withoutpath != filename_inzip ) )
-      {
-         CreateDirectoryRecursively( szTempDirBuffer );
-         hCurrentFile = CreateFile( szTempDirBuffer, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
-      }
-
-
-      //
-      // If we still haven't successfully created the handle, return an error.
-      //
-      if ( hCurrentFile == INVALID_HANDLE_VALUE ) RaiseError( "Could not extract the current file." );
-
-
-      //
-      // Read the compressed file and write it out
-      //
-      do
-      {
-         err = unzReadCurrentFile( uf, buf, BUFFER_SIZE );
-         if ( err < 0 )
-            RaiseError( "Could not get file info. This archive is likely corrupted." );
-         if ( err > 0 )
-            if ( !WriteFile( hCurrentFile, buf, err, &dwDummy, NULL ) )
-               RaiseError( "Could not extract the current file." );
-
-      } while ( err > 0 );
-
-      //
-      // Change the output file time/date to the date/time embedded in the zip file.
-      //
-      DosDateTimeToFileTime( file_info.wFatDate, file_info.wFatTime, &CurrentFileTime );
-      LocalFileTimeToFileTime( &CurrentFileTime, &CurrentFileTime );
-      SetFileTime( hCurrentFile, NULL, NULL, &CurrentFileTime );
-
-      //
-      // Clean up
-      //
-      CloseHandle( hCurrentFile );
-      VirtualFree( buf, 0, MEM_DECOMMIT );
-
-      unzCloseCurrentFile ( uf );
-
-      return err;
-   }
-   return TRUE;
 }
 
 
@@ -962,24 +845,6 @@ void SetDialogPage( int iPageNum )
 
 /*
 
-   do_extract_onefile
-
-   Extracts one specific file. Taken (and modified) from Gilles Vollant's MiniUnzip.
-
-*/
-int do_extract_onefile( unzFile uf, const char* filename, int opt_extract_without_path, int opt_overwrite, LPTSTR szTargetDirectory )
-{
-   int err = UNZ_OK;
-
-   if ( unzLocateFile( uf, filename, CASESENSITIVITY ) != UNZ_OK ) return 2;
-   if ( ExtractCurrentFile( uf, szTargetDirectory ) == UNZ_OK ) return 0;
-   else return 1;
-}
-
-
-
-/*
-
    InitApp
 
    Open self extractor, reads the embedded variables and sets the global options for this SFX.
@@ -999,11 +864,8 @@ void InitApp()
    DWORD dwDummy;
 
    char szTempDir[ MAX_PATH ] = "";
-   char szTempINIFile[ MAX_PATH ] = "";
    char *lpHeader;
    char szINIFileContents[ 16384 ];
-   char szAutoExtract[ 6 ];
-   char szOpenFolder[ 6 ];
 
 /*
 #ifdef _DEBUG // _DEBUG
@@ -1072,67 +934,71 @@ void InitApp()
       RaiseError( "Could not read the source SFX." );
 
    szINIFileContents[ dwDummy ] = '\0';
-   if ( memcmp( szINIFileContents, "[FE]", 4 ) != 0 )
-      RaiseError( "Could not read the source SFX." );
+
+   lstrcpy( szPackageName, "Unnamed Archive" );
+
+   lpHeader = szINIFileContents;
+   while ( memcmp( lpHeader, "PK\x03\x04", 4 ) != 0 )
+   {
+      char token[1024];
+      char *const argument = lpHeader;
+      lpHeader = lstrstr( lpHeader, "\n" );
+      if ( lpHeader == NULL )
+         RaiseError("Could not get file info. This archive is likely corrupted.");
+      *lpHeader++ = '\0';
+      //
+      // Load SFX vars to memory
+      //
+      if ( *gettoken( argument, "=", 0, token ) )
+      {
+         if ( !lstrcmpi( token, "ZipSize" ) )
+         {
+            char *p = token;
+            gettoken(argument, "=", 1, token);
+            iZipSize = 0;
+            while ( *p )
+            {
+               iZipSize *= 10;
+               iZipSize += *p++ - '0';
+            }
+         }
+      else
+         if ( !lstrcmpi( token, "Delete" ) ) iDeleteFiles = lstrstr( argument, "=1" ) != 0;
+      else
+         if ( !lstrcmpi( token, "NoGUI" ) ) bNoGUI = lstrstr(argument, "=1") != 0;
+      else
+         if ( !lstrcmpi( token, "Debug" ) ) isDebug = lstrstr(argument, "=1") != 0;
+      else
+         if ( !lstrcmpi( token, "Name" ) ) gettoken( argument, "=", 1, szPackageName );
+      else
+         if ( !lstrcmpi( token, "Exec" ) ) gettoken( argument, "=", 1, szExecuteCommand );
+      else
+         if ( !lstrcmpi( token, "DefaultPath" ) ) gettoken( argument, "=", 1, szDefaultPath );
+      else
+         if ( !lstrcmpi( token, "Intro" ) ) gettoken( argument, "=", 1, szIntroText );
+      else
+         if ( !lstrcmpi( token, "AutoExtract" ) ) bAutoExtract = lstrstr(argument, "=1") != 0;
+      else
+         if ( !lstrcmpi( token, "OpenFolder" ) ) bOpenFolder = lstrstr(argument, "=1") != 0;
+      else
+         if ( !lstrcmpi( token, "URL" ) ) gettoken(argument, "=", 1, szURL);
+      else
+         if ( !lstrcmpi( token, "Shortcut" ) )
+         {
+            gettoken(argument, "=", 1, token);
+            stkPush(&stk_Shortcuts, token);
+         }
+      }
+   }
 
    //
    // Search for the start of the zip file
    //
-   lpHeader = lstrstr( szINIFileContents, "PK\x03\x04" );
    if ( lpHeader == NULL )
       RaiseError("Could not get file info. This archive is likely corrupted.");
 
    MetaDataSize = (DWORD) ( lpHeader - szINIFileContents );
    iZipOffset = EndOffset + MetaDataSize;
-
-   //
-   // Write the settings to disk temporarily
-   //
-   GetTempPath( MAX_PATH, szTempDir );
-   GetTempFileName( szTempDir, "FE", 0, szTempINIFile );
-
-   hINITemp = CreateFile( szTempINIFile,
-                          GENERIC_WRITE,
-                          FILE_SHARE_READ | FILE_SHARE_WRITE,
-                          NULL,
-                          CREATE_ALWAYS,
-                          0,
-                          NULL );
-
-   if ( hINITemp == INVALID_HANDLE_VALUE ) RaiseError( "Can't write temp file" );
-
-   WriteFile( hINITemp, szINIFileContents, MetaDataSize, &dwDummy, NULL );
-   CloseHandle( hINITemp );
-
-
-   //
-   // Load SFX vars to memory
-   //
-   iZipSize = GetPrivateProfileInt( "FE", "ZipSize", 0, szTempINIFile );
-   iDeleteFiles = GetPrivateProfileInt( "FE", "Delete", 0, szTempINIFile );
-   bNoGUI = GetPrivateProfileInt( "FE", "NoGUI", 0, szTempINIFile );
-   isDebug = GetPrivateProfileInt( "FE", "Debug", 0, szTempINIFile );
-   GetPrivateProfileString( "FE", "Name", "Unnamed Archive", szPackageName, _countof(szPackageName), szTempINIFile );
-   GetPrivateProfileString( "FE", "Exec", "", szExecuteCommand, _countof(szExecuteCommand), szTempINIFile );
-   GetPrivateProfileString( "FE", "DefaultPath", "", szDefaultPath, _countof(szDefaultPath), szTempINIFile );
-   GetPrivateProfileString( "FE", "Intro", "", szIntroText, _countof(szIntroText), szTempINIFile );
-   GetPrivateProfileString( "FE", "AutoExtract", "0", szAutoExtract, _countof(szAutoExtract), szTempINIFile );
-   GetPrivateProfileString( "FE", "OpenFolder", "0", szOpenFolder, _countof(szOpenFolder), szTempINIFile );
-   GetPrivateProfileString( "FE", "URL", "", szURL, _countof(szURL), szTempINIFile );
-
-   //
-   // Load shortcut info into the stack
-   //
-   for ( i = 0 ;; ++i )
-   {
-      char szShortcutTemp[1024];
-      char szShortcutKey[16];
-      wsprintf( szShortcutKey, "Shortcut%d", i );
-      if ( GetPrivateProfileString( "FE", szShortcutKey, "", szShortcutTemp, _countof(szShortcutTemp), szTempINIFile ) == 0 )
-         break;
-      stkPush( &stk_Shortcuts, szShortcutTemp );
-   }
-
 
    //
    // Replace return carriages in intro text.
@@ -1149,9 +1015,6 @@ void InitApp()
    //
    // Parse and expand the default extraction folder
    //
-   if ( lstrcmpi( szAutoExtract, "1" ) == 0 )
-      bAutoExtract = TRUE;
-
    if ( *szDefaultPath == '\0' )
    {
       if ( bAutoExtract )
@@ -1174,14 +1037,6 @@ void InitApp()
    CleanPath( szDefaultPath );
 
    lstrcpy( szTargetDirectory, szDefaultPath );
-
-   if ( lstrcmpi( szOpenFolder, "1" ) == 0 )
-      bOpenFolder = TRUE;
-
-   //
-   // Clean Up
-   //
-   DeleteFile( szTempINIFile );
 }
 
 

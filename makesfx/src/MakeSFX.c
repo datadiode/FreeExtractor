@@ -107,7 +107,7 @@ int main( int argc, char *argv[] )
          {
             char szSCToken[ 1024 ];
             gettoken( argument, "=", 1, token );
-            wsprintf( szSCToken, "Shortcut%d=%s|\n", i, token );
+            wsprintf( szSCToken, "Shortcut=%s|\n", token );
             strcat( szShortcut, szSCToken );
             ++i;
          }

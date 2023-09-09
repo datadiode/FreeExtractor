@@ -98,7 +98,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;MINIZ_NO_STDIO;MINIZ_NO_TIME;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -135,7 +135,7 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;MINIZ_NO_STDIO;MINIZ_NO_TIME;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
@@ -172,7 +172,7 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
     <ClCompile>
       <Optimization>MinSpace</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -212,7 +212,7 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
     <ClCompile>
       <Optimization>MinSpace</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -240,37 +240,17 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\header.c" />
+    <ClCompile Include="src\miniz.c" />
     <ClCompile Include="src\shell.cpp" />
     <ClCompile Include="src\stack.c" />
-    <ClCompile Include="src\zLib\adler32.c" />
-    <ClCompile Include="src\zLib\crc32.c" />
-    <ClCompile Include="src\zLib\infblock.c" />
-    <ClCompile Include="src\zLib\infcodes.c" />
-    <ClCompile Include="src\zLib\inffast.c" />
-    <ClCompile Include="src\zLib\inflate.c" />
-    <ClCompile Include="src\zLib\inftrees.c" />
-    <ClCompile Include="src\zLib\infutil.c" />
-    <ClCompile Include="src\zLib\unzip.c" />
-    <ClCompile Include="src\zLib\zutil.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\FEcommon.h" />
     <ClInclude Include="src\header.h" />
+    <ClInclude Include="src\miniz.h" />
     <ClInclude Include="src\resource.h" />
     <ClInclude Include="src\shell.h" />
     <ClInclude Include="src\stack.h" />
-    <ClInclude Include="src\zLib\deflate.h" />
-    <ClInclude Include="src\zLib\infblock.h" />
-    <ClInclude Include="src\zLib\infcodes.h" />
-    <ClInclude Include="src\zLib\inffast.h" />
-    <ClInclude Include="src\zLib\inffixed.h" />
-    <ClInclude Include="src\zLib\inftrees.h" />
-    <ClInclude Include="src\zLib\infutil.h" />
-    <ClInclude Include="src\zLib\trees.h" />
-    <ClInclude Include="src\zLib\unzip.h" />
-    <ClInclude Include="src\zLib\zconf.h" />
-    <ClInclude Include="src\zLib\zlib.h" />
-    <ClInclude Include="src\zLib\zutil.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\box.bmp" />

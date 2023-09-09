@@ -71,7 +71,7 @@
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.45"
+#define VERSION            "v1.46"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
@@ -995,10 +995,9 @@ DWORD CALLBACK Build( void *dummy )
    // Build the metadata string
    //
    wsprintf( szINIFileContents,
-             "[FE]\n"
              "Name=%s\n"
              "ZipSize=%d\n"
-             "Exec=\"%s\"\n"
+             "Exec=%s\n"
              "DefaultPath=%s\n"
              "Intro=%s\n"
              "URL=%s\n",

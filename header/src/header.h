@@ -40,8 +40,7 @@
 
 #include "resource.h"
 #include "..\..\common\FECommon.h"
-#include "zLib/zlib.h"
-#include "zLib/unzip.h"
+#include "miniz.h"
 #include "stack.h"
 #include "shell.h"
 
@@ -81,10 +80,10 @@ LPCTSTR const szSubBannerText[]
 
 int iEXEFileSize;
 int INIOffset;
-iZipOffset = 0;
-iZipSize = 0;
-iDeleteFiles = 0;
-iDialogArray[] = {0, IDD_SPLASH, IDD_PATH, IDD_PROGRESS };
+int iZipOffset = 0;
+int iZipSize = 0;
+int iDeleteFiles = 0;
+int iDialogArray[] = {0, IDD_SPLASH, IDD_PATH, IDD_PROGRESS };
 
 
 BOOL bDelete = FALSE;
@@ -105,7 +104,6 @@ void InitApp();
 DWORD CALLBACK Extract( void *dummy );
 DWORD CALLBACK DeleteFiles( void *dummy );
 void SetDialogPage( int iPageNum );
-int ExtractCurrentFile( unzFile uf, LPTSTR szTargetDirectory );
 void ExecCommand();
 void CreateDirCheckError();
 
