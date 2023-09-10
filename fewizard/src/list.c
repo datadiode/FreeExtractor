@@ -112,18 +112,17 @@ void ListPush( List *plist, char *shortcut, char *target, int UID )
 
 void ListDeleteNode( List *plist )
 {
-   ListNode * pdel;
+   ListNode *pdel;
 
    if ( !plist ) return ;
-   if ( plist->vcount == 1 )
-   {
-      ListInit( plist );
-      return ;
-   }
 
    pdel = plist->ptop;
 
-   if ( pdel->pnext == NULL )
+   if ( plist->vcount == 1 )
+   {
+      plist->ptop = NULL;
+   }
+   else if ( pdel->pnext == NULL )
    {
       if ( plist->ptop->pprev == NULL )
          ListInit( plist );
@@ -141,11 +140,8 @@ void ListDeleteNode( List *plist )
       plist->ptop = plist->ptop->pprev;
       plist->ptop->pnext = pdel->pnext;
       plist->ptop->pnext->pprev = plist->ptop;
-
    }
 
    VirtualFree( pdel, 0, MEM_RELEASE );
    plist->vcount--;
 }
-
-

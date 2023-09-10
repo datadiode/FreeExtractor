@@ -52,6 +52,9 @@
 #define IDC_SUBSYSTEM64                 1031
 #define IDC_STATUSLABEL                 2000
 #define IDC_CONFIRMMESSAGE              2005
+#define IDC_INILABEL                    2006
+#define IDC_INIPATH                     2007
+#define IDC_OPENINI                     2008
 #define IDC_DESKTOPSHORTCUT             2009
 #define IDC_INSTALL_INFO                2012
 #define IDC_DELETEFILES                 2015

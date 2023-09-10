@@ -54,6 +54,7 @@ int main( int argc, char *argv[] )
 {
    int i = 0;
    char token[ 1024 ];
+   char *p = szShortcut;
 
    __int64 liStart;
    __int64 liEnd;
@@ -105,10 +106,8 @@ int main( int argc, char *argv[] )
          //
          if ( !_strcmpi( token, "/shortcut" ) && i < 16 )
          {
-            char szSCToken[ 1024 ];
             gettoken( argument, "=", 1, token );
-            wsprintf( szSCToken, "Shortcut=%s|\n", token );
-            strcat( szShortcut, szSCToken );
+            p += wsprintf( p, "Shortcut=%s", token ) + 1;
             ++i;
          }
       }
@@ -142,6 +141,8 @@ int main( int argc, char *argv[] )
          if ( !_strcmpi( token, "/?" ) || !_strcmpi( token, "-?" ) || !_strcmpi( token, "/help" ) || !_strcmpi( token, "-help" ) ) isHelp = TRUE;
       }
    }
+
+   *p++ = '\0';
 
    if ( isHelp )
    {

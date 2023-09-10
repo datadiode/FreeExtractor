@@ -1,3 +1,9 @@
+FreeExtractor v1.47, September 10, 2023
+
+   - FEWIZARD: Allow to choose a presets file other than the default.ini found in the executable's folder.
+   - FEWIZARD: Remember shortcuts in presets file.
+   - FEWIZARD: Write intro text to its own presets file section to make it more readable and ease manual editing.
+
 FreeExtractor v1.46, September 9, 2023
 
    - SFX: Avoid the temporary INI file as it represents a potential attack target.

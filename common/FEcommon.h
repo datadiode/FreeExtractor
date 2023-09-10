@@ -71,7 +71,7 @@
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.46"
+#define VERSION            "v1.47"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
@@ -925,6 +925,7 @@ DWORD CALLBACK Build( void *dummy )
    int i = 0;
    DWORD dwDummy, dwBytesRead, dwBytesWritten;
 
+   char *p, *q;
    HRSRC const hICON = FindResource(NULL, "setup.ico", RT_RCDATA);
    char* const pchICON = (char*)LoadResource(NULL, hICON);
    DWORD const cchICON = SizeofResource(NULL, hICON);
@@ -994,25 +995,23 @@ DWORD CALLBACK Build( void *dummy )
    //
    // Build the metadata string
    //
-   wsprintf( szINIFileContents,
-             "Name=%s\n"
-             "ZipSize=%d\n"
-             "Exec=%s\n"
-             "DefaultPath=%s\n"
-             "Intro=%s\n"
-             "URL=%s\n",
-             szPackageName, iZipFileSize,
-             szExecuteCommand, szExtractionPath,
-             szIntroText, szURL );
+   p = szINIFileContents;
+   p += wsprintf(p, "Name=%s", szPackageName) + 1;
+   p += wsprintf(p, "ZipSize=%d", iZipFileSize) + 1;
+   p += wsprintf(p, "Exec=%s", szExecuteCommand) + 1;
+   p += wsprintf(p, "DefaultPath=%s", szExtractionPath) + 1;
+   p += wsprintf(p, "Intro=%s", szIntroText) + 1;
+   p += wsprintf(p, "URL=%s", szURL) + 1;
 
-   if ( bAutoExtract ) lstrcat( szINIFileContents, "AutoExtract=1\n" );
-   if ( bOpenFolder ) lstrcat( szINIFileContents, "OpenFolder=1\n" );
-   if ( bDeleteFiles ) lstrcat( szINIFileContents, "Delete=1\n" );
-   if ( bNoGUI ) lstrcat( szINIFileContents, "NoGUI=1\n" );
+   if ( bAutoExtract ) p += wsprintf(p, "AutoExtract=1" ) + 1;
+   if ( bOpenFolder ) p += wsprintf(p, "OpenFolder=1" ) + 1;
+   if ( bDeleteFiles ) p += wsprintf(p, "Delete=1" ) + 1;
+   if ( bNoGUI ) p += wsprintf(p, "NoGUI=1" ) + 1;
    //if ( isDebug ) lstrcat( szINIFileContents, "Debug=1\n" );          // not used yet.
-   lstrcat( szINIFileContents, szShortcut );
-   iINIFileSize = lstrlen( szINIFileContents );
 
+   for ( q = szShortcut ; *q ; q += lstrlen(q) + 1 )
+      p += wsprintf( p, "%s", q ) + 1;
+   iINIFileSize = ( int ) ( p - szINIFileContents );
 
    //
    // Write the metadata out

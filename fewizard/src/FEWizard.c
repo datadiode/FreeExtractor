@@ -56,6 +56,62 @@ BOOL IsZipFile( LPTSTR szFileName )
    return cb == 4 && buf[ 0 ] == 'P' && buf[ 1 ] == 'K' && buf[ 2 ] == 0x03 && buf[ 3 ] == 0x04;
 }
 
+void OpenINI()
+{
+   int i, n;
+
+   SetDlgItemText(hwndStatic, IDC_INIPATH, szINIPath);
+
+   GetPrivateProfileString( "FE", "Title", "", szPackageName, 255, szINIPath );
+   GetPrivateProfileString( "FE", "Website", "", szURL, 128, szINIPath );
+   GetPrivateProfileString( "FE", "ExtractPath", "", szExtractionPath, MAX_PATH, szINIPath );
+   GetPrivateProfileString( "FE", "Execute", "", szExecuteCommand, MAX_PATH, szINIPath );
+
+   bRunElevated = GetPrivateProfileInt( "FE", "RunElevated", 0, szINIPath );
+   bSubsystem64 = GetPrivateProfileInt( "FE", "Subsystem64", 0, szINIPath );
+   bAutoExtract = GetPrivateProfileInt( "FE", "AutoExtract", 0, szINIPath );
+   bOpenFolder = GetPrivateProfileInt( "FE", "OpenFolder", 0, szINIPath );
+   bDeleteFiles = GetPrivateProfileInt( "FE", "DeleteFiles", 0, szINIPath );
+
+   //
+   // Replace return carriages in intro text.
+   //
+   n = GetPrivateProfileSection( "IntroText", szIntroText, _countof(szIntroText), szINIPath );
+   for ( i = 0 ; i < n ; ++i )
+   {
+      if ( ( szIntroText[ i ] == '\\' ) && ( szIntroText[ i + 1 ] == '\0' ) )
+      {
+         szIntroText[ i ] = 0x0D;
+         szIntroText[ i + 1 ] = 0x0A;
+      }
+   }
+
+   GetPrivateProfileSection( "Shortcuts", szShortcut, _countof(szShortcut), szINIPath );
+
+   while ( ListCount( &list_Shortcuts ) != 0 )
+      ListDeleteNode( &list_Shortcuts );
+
+   for ( i = 0 ; szShortcut[ i ] != '\0' ; i += lstrlen( szShortcut + i ) + 1 )
+   {
+      char szToken[ MAX_PATH ];
+      if ( *gettoken( szShortcut + i, "=", 0, szToken) && lstrcmpi(szToken, "Shortcut" ) == 0 )
+      {
+         char szLocation[ MAX_PATH ];
+         char szTarget[ MAX_PATH ];
+
+         gettoken( szShortcut + i, "=", 1, szToken );
+         gettoken( szToken, "|", 0, szLocation );
+         gettoken( szToken, "|", 1, szTarget );
+
+         if ( *szLocation && *szTarget )
+         {
+            ListMoveLast( &list_Shortcuts );
+            ListPush( &list_Shortcuts, szLocation, szTarget, 0 );
+         }
+      }
+   }
+}
+
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
    int slashpos = 0;
@@ -103,35 +159,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
    //
    if ( FileExists( szINIPath ) )
    {
-      int i = 0;
-
-      GetPrivateProfileString( "FE", "Title", "", szPackageName, 255, szINIPath );
-      GetPrivateProfileString( "FE", "Website", "", szURL, 128, szINIPath );
-      GetPrivateProfileString( "FE", "IntroText", "", szIntroText, 650, szINIPath );
-      GetPrivateProfileString( "FE", "ExtractPath", "", szExtractionPath, MAX_PATH, szINIPath );
-      GetPrivateProfileString( "FE", "Execute", "", szExecuteCommand, MAX_PATH, szINIPath );
-
-      bRunElevated = GetPrivateProfileInt( "FE", "RunElevated", 0, szINIPath );
-      bSubsystem64 = GetPrivateProfileInt( "FE", "Subsystem64", 0, szINIPath );
-      bAutoExtract = GetPrivateProfileInt( "FE", "AutoExtract", 0, szINIPath );
-      bOpenFolder = GetPrivateProfileInt( "FE", "OpenFolder", 0, szINIPath );
-      bDeleteFiles = GetPrivateProfileInt( "FE", "DeleteFiles", 0, szINIPath );
-
-      //
-      // Replace return carriages in intro text.
-      //
-      while ( szIntroText[ i ] != '\0' )
-      {
-         if ( ( szIntroText[ i ] == '\\' ) && ( szIntroText[ i + 1 ] == 'n' ) )
-         {
-            szIntroText[ i ] = 0x0D;
-            szIntroText[ i + 1 ] = 0x0A;
-         }
-         i++;
-      }
-
+      OpenINI();
    }
-
+   else
+   {
+      *szINIPath = '\0';
+   }
 
    //
    // Check to see if a filename was passed from the command
@@ -160,10 +193,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
    DialogBox( ghInstance, MAKEINTRESOURCE( IDD_TEMPLATE ), NULL, MainDlgProc );
    return 1;
 }
-
-
-
-
 
 
 INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
@@ -251,12 +280,6 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 }
 
 
-
-
-
-
-
-
 /*
 
    MainDlgProc
@@ -332,11 +355,27 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       return FALSE;
 
    case WM_DROPFILES:
-      if ( iCurrentPage == ZIP_PAGE )
       {
          HDROP hDrop = ( HDROP ) wParam;
-         DragQueryFile( hDrop, 0, szZipFileName, MAX_PATH );
-         Open();
+         UINT n = DragQueryFile( hDrop, 0xFFFFFFFF, NULL, 0 );
+         UINT i;
+         for ( i = 0 ; i < n ; ++i )
+         {
+            char szFileName[ MAX_PATH ];
+            if ( DragQueryFile( hDrop, i, szFileName, _countof(szFileName) ) )
+            {
+               if ( PathMatchSpec( szFileName, "*.zip" ) )
+               {
+                  lstrcpy( szZipFileName, szFileName );
+                  Open();
+               }
+               else if ( PathMatchSpec( szFileName, "*.ini" ) )
+               {
+                  lstrcpy( szINIPath, szFileName );
+                  OpenINI();
+               }
+            }
+         }
       }
       return TRUE;
 
@@ -440,7 +479,7 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             *szIntroText = '\0';
             *szExecuteCommand = '\0';
             *szExtractionPath = '\0';
-            *szShortcut = '\0';
+            szShortcut[0] = szShortcut[1] = '\0';
 
             DestroyIcon( hIcon );
             ListInit( &list_Shortcuts );
@@ -449,7 +488,7 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 
             SetDlgItemText( hwndMain, IDC_NEXT, "Next >" );
             SetDlgItemText( hwndMain, IDC_CANCEL, "Cancel" );
-			break;
+            break;
          }
 
          SetDialogPage( iCurrentPage );
@@ -479,10 +518,13 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 void SetDialogPage( int iPageNum )
 {
    int i;
+   char *p;
 
    if ( hwndStatic != NULL ) DestroyWindow( hwndStatic );
 
    LoadDialog( iDialogArray[ iPageNum ] );
+
+   DragAcceptFiles( hwndMain, iCurrentPage == ZIP_PAGE );
 
    SetBannerText( szBannerText[ iCurrentPage ] );
    SetSubBannerText( szSubBannerText[ iCurrentPage ] );
@@ -531,16 +573,20 @@ void SetDialogPage( int iPageNum )
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), FALSE );
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
 
+      SetDlgItemText( hwndStatic, IDC_INIPATH, szINIPath );
       SetDlgItemText( hwndStatic, IDC_ZIPPATH, szZipFileName );
       SetDlgItemText( hwndStatic, IDC_EXEOUT, szEXEOutPath );
 
       if (*szEXEOutPath ) EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
 
       DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
+      DLGITEM_SETFONT( hwndStatic, IDC_INILABEL )
+      DLGITEM_SETFONT( hwndStatic, IDC_INIPATH )
+      DLGITEM_SETFONT( hwndStatic, IDC_OPENINI )
       DLGITEM_SETFONT( hwndStatic, IDC_ZIPLABEL )
       DLGITEM_SETFONT( hwndStatic, IDC_ZIPPATH )
-      DLGITEM_SETFONT( hwndStatic, IDC_OUTLABEL )
       DLGITEM_SETFONT( hwndStatic, IDC_OPEN )
+      DLGITEM_SETFONT( hwndStatic, IDC_OUTLABEL )
       DLGITEM_SETFONT( hwndStatic, IDC_EXEOUT )
       break;
 
@@ -580,6 +626,8 @@ void SetDialogPage( int iPageNum )
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
 
       DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
+      DLGITEM_SETFONT( hwndStatic, IDC_RUNELEVATED )
+      DLGITEM_SETFONT( hwndStatic, IDC_SUBSYSTEM64 )
       DLGITEM_SETFONT( hwndStatic, IDC_AUTOEXTRACT )
       DLGITEM_SETFONT( hwndStatic, IDC_OPENFOLDER )
       DLGITEM_SETFONT( hwndStatic, IDC_DEFAULT_EXTRACTION_PATH )
@@ -621,13 +669,13 @@ void SetDialogPage( int iPageNum )
       // Build shortcut string before build
       //
       ListMoveFirst( &list_Shortcuts );
+      p = szShortcut;
       for ( i = 0 ; i < ListCount( &list_Shortcuts ) ; ++i )
       {
-         char szSCToken[ 1024 ];
-         wsprintf( szSCToken, "Shortcut=%s|%s|\n", ListPeekShortcut( &list_Shortcuts ), ListPeekTarget( &list_Shortcuts ) );
-         lstrcat( szShortcut, szSCToken );
+         p += wsprintf( p, "Shortcut=%s|%s", ListPeekShortcut( &list_Shortcuts ), ListPeekTarget( &list_Shortcuts ) ) + 1;
          ListMoveNext( &list_Shortcuts );
       }
+      *p++ = '\0';
 
       hExtractThread = CreateThread( NULL, 0, Build, NULL, 0, NULL );
 
@@ -821,15 +869,6 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
 
       return FALSE;
 
-   case WM_DROPFILES:
-      if ( iCurrentPage == ZIP_PAGE )
-      {
-         HDROP hDrop = ( HDROP ) wParam;
-         DragQueryFile( hDrop, 0, szZipFileName, MAX_PATH );
-         Open();
-      }
-      return TRUE;
-
    case WM_CTLCOLORSTATIC:
       if ( iCurrentPage == SPLASH_PAGE )
       {
@@ -1000,9 +1039,24 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
             ofn.nMaxFile = MAX_PATH;
             ofn.lpstrFilter = "ZIP Files (*.zip)\0*.zip\0All Files (*.*)\0*.*\0";
             ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_ENABLESIZING | OFN_SHAREAWARE;
-            GetOpenFileName( &ofn );
 
-            if ( *szZipFileName ) Open();
+            if ( GetOpenFileName( &ofn ) ) Open();
+
+            return TRUE;
+         }
+
+      case IDC_OPENINI:
+         {
+            OPENFILENAME ofn = { sizeof ofn };
+
+            ofn.hwndOwner = hwndMain;
+            ofn.lpstrFile = szINIPath;
+            ofn.hInstance = ghInstance;
+            ofn.nMaxFile = MAX_PATH;
+            ofn.lpstrFilter = "INI Files (*.ini)\0*.ini\0All Files (*.*)\0*.*\0";
+            ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_ENABLESIZING | OFN_SHAREAWARE;
+
+            if ( GetOpenFileName( &ofn ) ) OpenINI();
 
             return TRUE;
          }
@@ -1207,79 +1261,69 @@ INT_PTR CALLBACK ShortcutDlgProc ( HWND hDlg, UINT message, WPARAM wParam, LPARA
    switch ( message )
    {
    case WM_INITDIALOG:
-      {
-         hWndListView = GetDlgItem( hwndStatic, IDC_LIST );
+      hWndListView = GetDlgItem( hwndStatic, IDC_LIST );
 
-         DLGITEM_SETFONT( hDlg, IDC_MAINTEXT );
-         DLGITEM_SETFONT( hDlg, IDC_SHORTCUTLABEL );
-         DLGITEM_SETFONT( hDlg, IDC_SCLOCATION );
-         DLGITEM_SETFONT( hDlg, IDC_LOCATIONEXAMPLE );
-         DLGITEM_SETFONT( hDlg, IDC_TARGETLABEL );
-         DLGITEM_SETFONT( hDlg, IDC_SCTARGET );
-         DLGITEM_SETFONT( hDlg, IDC_TARGETEXAMPLE );
-         DLGITEM_SETFONT( hDlg, IDOK );
-         DLGITEM_SETFONT( hDlg, IDCANCEL );
+      DLGITEM_SETFONT( hDlg, IDC_MAINTEXT );
+      DLGITEM_SETFONT( hDlg, IDC_SHORTCUTLABEL );
+      DLGITEM_SETFONT( hDlg, IDC_SCLOCATION );
+      DLGITEM_SETFONT( hDlg, IDC_LOCATIONEXAMPLE );
+      DLGITEM_SETFONT( hDlg, IDC_TARGETLABEL );
+      DLGITEM_SETFONT( hDlg, IDC_SCTARGET );
+      DLGITEM_SETFONT( hDlg, IDC_TARGETEXAMPLE );
+      DLGITEM_SETFONT( hDlg, IDOK );
+      DLGITEM_SETFONT( hDlg, IDCANCEL );
 
-         return TRUE;
-      }
+      return TRUE;
 
 #ifndef NO_HTML_HELP
    case WM_HELP:
-      {
-         if ( HtmlHelp( hwndMain, szHelpPath, HH_HELP_CONTEXT, IDH_SHORTCUTS ) == NULL )
-            MessageBox( hwndMain, "FEHelp.chm could not be found or loaded.", "Cannot load help", 0 );
-         return TRUE;
-      }
+      if ( HtmlHelp( hwndMain, szHelpPath, HH_HELP_CONTEXT, IDH_SHORTCUTS ) == NULL )
+         MessageBox( hwndMain, "FEHelp.chm could not be found or loaded.", "Cannot load help", 0 );
+      return TRUE;
 #endif
 
    case WM_QUIT:
    case WM_CLOSE:
-      {
-         PostMessage( hwndMain, WM_COMMAND, IDC_CANCEL, 0 );
-         return TRUE;
-      }
+      PostMessage( hwndMain, WM_COMMAND, IDC_CANCEL, 0 );
+      return TRUE;
 
    case WM_COMMAND:
+      switch ( LOWORD( wParam ) )
       {
-         switch ( LOWORD( wParam ) )
+      case IDOK:
          {
-         case IDOK:
+            char szLocation[ MAX_PATH ] = "";
+            char szTarget[ MAX_PATH ] = "";
+
+            //
+            // Save Settings
+            //
+            GetDlgItemText( hDlg, IDC_SCLOCATION, szLocation, MAX_PATH );
+            GetDlgItemText( hDlg, IDC_SCTARGET, szTarget, MAX_PATH );
+
+            StrTrim( szLocation, " \t\r\n" );
+            StrTrim( szTarget, " \t\r\n" );
+
+            ListMoveLast( &list_Shortcuts );
+
+            if ( *szLocation && *szTarget )
             {
-               char szLocation[ MAX_PATH ] = "";
-               char szTarget[ MAX_PATH ] = "";
-
-               //
-               // Save Settings
-               //
-               GetDlgItemText( hDlg, IDC_SCLOCATION, szLocation, MAX_PATH );
-               GetDlgItemText( hDlg, IDC_SCTARGET, szTarget, MAX_PATH );
-
-               StrTrim( szLocation, " \t\r\n" );
-               StrTrim( szTarget, " \t\r\n" );
-
-               ListMoveLast( &list_Shortcuts );
-
-               if ( lstrlen( szLocation ) != 0 && lstrlen( szTarget ) != 0 )
-               {
-                  ListPush( &list_Shortcuts, ( char * ) szLocation, ( char * ) szTarget, 0 );
-               }
-
-               //
-               // Close dialog
-               //
-               EndDialog( hDlg, 0 );
-               return TRUE;
+               ListPush( &list_Shortcuts, szLocation, szTarget, 0 );
             }
 
-         case IDCANCEL:
-            {
-               //
-               // Close Dialog
-               //
-               EndDialog( hDlg, 0 );
-               return TRUE;
-            }
+            //
+            // Close dialog
+            //
+            EndDialog( hDlg, 0 );
+            return TRUE;
          }
+
+      case IDCANCEL:
+         //
+         // Close Dialog
+         //
+         EndDialog( hDlg, 0 );
+         return TRUE;
       }
    }
 
@@ -1307,9 +1351,10 @@ void CheckSaveSettings()
    {
       if ( IsDlgButtonChecked( hwndStatic, IDC_SAVESETTINGS ) )
       {
+         int i;
+
          WritePrivateProfileString( "FE", "Title", szPackageName, szINIPath );
          WritePrivateProfileString( "FE", "Website", szURL, szINIPath );
-         WritePrivateProfileString( "FE", "IntroText", szIntroText, szINIPath );
          WritePrivateProfileString( "FE", "ExtractPath", szExtractionPath, szINIPath );
          WritePrivateProfileQuoted( "FE", "Execute", szExecuteCommand, szINIPath );
 
@@ -1318,6 +1363,21 @@ void CheckSaveSettings()
          WritePrivateProfileString( "FE", "AutoExtract", bAutoExtract ? "1" : NULL, szINIPath );
          WritePrivateProfileString( "FE", "OpenFolder", bOpenFolder ? "1" : NULL, szINIPath );
          WritePrivateProfileString( "FE", "DeleteFiles", bDeleteFiles ? "1" : NULL, szINIPath );
+
+         WritePrivateProfileSection( "Shortcuts", szShortcut, szINIPath );
+
+         //
+         // Replace return carriages in intro text.
+         //
+         for (i = 0; szIntroText[i] != '\0'; ++i)
+         {
+            if ((szIntroText[i] == '\\') && (szIntroText[i + 1] == 'n'))
+               szIntroText[++i] = '\0';
+         }
+         szIntroText[++i] = '\0';
+
+         WritePrivateProfileSection("IntroText", NULL, szINIPath);
+         WritePrivateProfileSection("IntroText", szIntroText, szINIPath);
       }
    }
 }

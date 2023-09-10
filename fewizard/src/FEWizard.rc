@@ -30,21 +30,19 @@ IDB_BITMAP1             BITMAP  DISCARDABLE     "..\\res\\box.bmp"
 IDD_TEMPLATE DIALOGEX 0, 0, 331, 222
 STYLE DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | DS_CONTEXTHELP | WS_POPUP |
     WS_CAPTION | WS_SYSMENU
-EXSTYLE WS_EX_ACCEPTFILES | WS_EX_CONTEXTHELP | WS_EX_CONTROLPARENT
+EXSTYLE WS_EX_CONTEXTHELP | WS_EX_CONTROLPARENT
 CAPTION "FreeExtractor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     PUSHBUTTON      "< Back",IDC_BACK,166,201,50,14
     PUSHBUTTON      "Next >",IDC_NEXT,216,201,50,14
     PUSHBUTTON      "Cancel",IDC_CANCEL,274,201,50,14
-    CONTROL         "",IDC_BOTTOMFRAME,"Static",SS_ETCHEDHORZ,0,192,335,1,
-                    WS_EX_ACCEPTFILES
+    CONTROL         "",IDC_BOTTOMFRAME,"Static",SS_ETCHEDHORZ,0,192,335,1
     CONTROL         "",IDC_BANNER,"Static",SS_SIMPLE | WS_GROUP,13,7,258,8,
-                    WS_EX_ACCEPTFILES | WS_EX_TRANSPARENT
+                    WS_EX_TRANSPARENT
     CONTROL         "",IDC_SUBBANNER,"Static",SS_SIMPLE | WS_GROUP,29,17,242,
-                    10,WS_EX_ACCEPTFILES | WS_EX_TRANSPARENT
-    CONTROL         "",IDC_TOPFRAME,"Static",SS_ETCHEDHORZ,0,37,335,1,
-                    WS_EX_ACCEPTFILES
+                    10,WS_EX_TRANSPARENT
+    CONTROL         "",IDC_TOPFRAME,"Static",SS_ETCHEDHORZ,0,37,335,1
 END
 
 IDD_SPLASH DIALOGEX 0, 0, 335, 192
@@ -64,17 +62,21 @@ END
 
 IDD_ZIPFILE DIALOGEX 0, 0, 276, 135
 STYLE DS_LOCALEDIT | DS_CONTROL | WS_CHILD | WS_VISIBLE
-EXSTYLE WS_EX_ACCEPTFILES | WS_EX_CONTROLPARENT
+EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&Open",IDC_OPEN,218,35,57,14
-    EDITTEXT        IDC_ZIPPATH,0,36,213,12,ES_AUTOHSCROLL | ES_READONLY |
+    PUSHBUTTON      "O&pen",IDC_OPENINI,218,35,57,14
+    PUSHBUTTON      "&Open",IDC_OPEN,218,65,57,14
+    EDITTEXT        IDC_INIPATH,0,36,213,12,ES_AUTOHSCROLL | ES_READONLY |
                     NOT WS_BORDER,WS_EX_STATICEDGE
-    EDITTEXT        IDC_EXEOUT,0,66,276,12,ES_READONLY | NOT WS_BORDER,
+    EDITTEXT        IDC_ZIPPATH,0,66,213,12,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER,WS_EX_STATICEDGE
+    EDITTEXT        IDC_EXEOUT,0,96,276,12,ES_READONLY | NOT WS_BORDER,
                     WS_EX_STATICEDGE
-    LTEXT           "Source ZIP file:",IDC_ZIPLABEL,0,28,52,8
-    LTEXT           "Output EXE:",IDC_OUTLABEL,0,58,42,8
-    LTEXT           "You may either click 'Open' and select a .zip file or you may drag-and-drop it from Windows. The source .zip file will not be modified.",
+    LTEXT           "Presets INI file:",IDC_INILABEL,0,28,52,8
+    LTEXT           "Source ZIP file:",IDC_ZIPLABEL,0,58,52,8
+    LTEXT           "Output EXE:",IDC_OUTLABEL,0,88,42,8
+    LTEXT           "You may either click 'Open' and select a .zip or .ini file, or you may drag-and-drop them from Windows. The source .zip file will not be modified.",
                     IDC_TEXT,0,0,276,21
 END
 

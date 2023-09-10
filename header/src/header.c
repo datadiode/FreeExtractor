@@ -863,8 +863,6 @@ void InitApp()
 
    DWORD dwDummy;
 
-   char szTempDir[ MAX_PATH ] = "";
-   char *lpHeader;
    char szINIFileContents[ 16384 ];
 
 /*
@@ -937,18 +935,11 @@ void InitApp()
 
    lstrcpy( szPackageName, "Unnamed Archive" );
 
-   lpHeader = szINIFileContents;
-   while ( memcmp( lpHeader, "PK\x03\x04", 4 ) != 0 )
+   while ( MetaDataSize + 4 <= dwDummy && memcmp(szINIFileContents + MetaDataSize, "PK\x03\x04", 4 ) != 0 )
    {
       char token[1024];
-      char *const argument = lpHeader;
-      lpHeader = lstrstr( lpHeader, "\n" );
-      if ( lpHeader == NULL )
-         RaiseError("Could not get file info. This archive is likely corrupted.");
-      *lpHeader++ = '\0';
-      //
-      // Load SFX vars to memory
-      //
+      char *const argument = szINIFileContents + MetaDataSize;
+      MetaDataSize += lstrlen(argument) + 1;
       if ( *gettoken( argument, "=", 0, token ) )
       {
          if ( !lstrcmpi( token, "ZipSize" ) )
@@ -994,10 +985,9 @@ void InitApp()
    //
    // Search for the start of the zip file
    //
-   if ( lpHeader == NULL )
+   if ( MetaDataSize + 4 > dwDummy )
       RaiseError("Could not get file info. This archive is likely corrupted.");
 
-   MetaDataSize = (DWORD) ( lpHeader - szINIFileContents );
    iZipOffset = EndOffset + MetaDataSize;
 
    //
