@@ -32,30 +32,20 @@
 */
 
 
-#define STRICT
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
 #include <windowsx.h>
 #include <shlobj.h>
-#include <process.h>
-#include <shlobj.h>
 #include <shellapi.h>
 #include <commctrl.h>
 #include <commdlg.h>
-#include <olectl.h>
 
 #ifdef _WIZARD_
-#define INCLUDE_HEADER
 #ifndef NO_HTML_HELP
 #include <Htmlhelp.h>
 #endif
 #endif
-
-
-#ifdef _MAKESFX_
-#define INCLUDE_HEADER
-#endif // _MAKESFX_
 
 
 #ifdef _CONSOLE
@@ -64,14 +54,13 @@
 #endif
 
 
-
-#define _TEXT_BLUE_        0x00AA0000
+#define _TEXT_BLUE_        0x00B75700
 #define _TEXT_BLACK_       0x00000000
 #define _TEXT_GRAY_        0x00BBBBBB
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.47"
+#define VERSION            "v1.48"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
@@ -83,10 +72,6 @@
 #define DLG_X_SCALE(pixels)      (pixels * LOWORD(GetDialogBaseUnits())) / DLG_SCALE_X
 #define DLG_Y_SCALE(pixels)      (pixels * HIWORD(GetDialogBaseUnits())) / DLG_SCALE_Y
 
-
-#ifdef _DEBUG
-#define DISABLE_PAYLOAD_CHECK
-#endif
 
 #ifdef _CONSOLE
 #define WriteConsoleOut             printf
@@ -116,17 +101,16 @@
    Global Variables (common)
  
 */
-HWND hwndMain, hwndStatic;
-
-HANDLE hFile;
-HANDLE hExtractThread;
+HWND hwndMain = NULL;
+HWND hwndStatic = NULL;
+HMENU hShortcuts = NULL;
+HANDLE hFile = NULL;
 
 HINSTANCE ghInstance;
 
 char szZipFileName[ MAX_PATH ] = "";
 char szEXEOutPath[ MAX_PATH ] = "";
 char szIconPath[ MAX_PATH ] = "";
-char szTempDir[ MAX_PATH ] = "";
 char szExtractionPath[ MAX_PATH ] = "";
 char szPackageName[ 255 ] = "";
 char szExecuteCommand[ MAX_PATH ] = "";
@@ -149,7 +133,7 @@ BOOL bChangeIcon = FALSE;
 BOOL isDebug = FALSE;
 
 char szActiveFont[ LF_FACESIZE ];
-int iFontSize;
+int const iFontSize = 13;
 
 
 /*
@@ -163,8 +147,6 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
 #endif
 
-
-
 /*
  
    CleanUp
@@ -174,19 +156,14 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
 */
 void CleanUp()
 {
-
 #ifndef _CONSOLE
-   if ( hwndStatic != NULL ) DestroyWindow( hwndStatic );
-   if ( hwndMain != NULL ) DestroyWindow( hwndMain );
-   if ( hFile != NULL ) CloseHandle( hFile );
-
-#ifdef _WIZARD_
-   if ( hExtractThread ) CloseHandle ( hExtractThread );
-#endif // _WIZARD_
-
+   DestroyWindow( hwndStatic );
+   DestroyWindow( hwndMain );
+   DestroyMenu( hShortcuts );
+   CloseHandle( hFile );
 #endif // _CONSOLE
 
-   ExitProcess( 1 );
+   ExitProcess( 0 );
 }
 
 
@@ -199,26 +176,26 @@ void CleanUp()
 */
 void RaiseError( LPTSTR szTheErrorText )
 {
-   char szErrorBase[ 1024 ];
-   LPTSTR szWinError = "";
+   char buf[ 1536 ];
+   char szWinError[ 1024 ];
 
+   *szWinError = '\0';
    if ( GetLastError() != ERROR_SUCCESS )
    {
-      FormatMessage(
-         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-         NULL,
-         GetLastError(),
-         MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
-         ( LPTSTR ) & szWinError,
-         0,
-         NULL );
+      FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM,
+                     NULL,
+                     GetLastError(),
+                     MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
+                     szWinError,
+                     _countof(szWinError),
+                     NULL );
    }
-   wsprintf( szErrorBase, "An error prevents this program from continuing:\n\n %s %s", szTheErrorText, szWinError );
+   wsprintf( buf, "An error prevents this program from continuing:\n\n %s %s", szTheErrorText, szWinError );
 
 #ifdef _CONSOLE
-   WriteConsoleOut( "ERROR: %s\n", szErrorBase );
+   WriteConsoleOut( "ERROR: %s\n", buf );
 #else
-   MessageBox( NULL, szErrorBase, "FreeExtractor Error", _CRITICAL_ );
+   MessageBox( hwndMain, buf, "FreeExtractor Error", _CRITICAL_ );
 #endif // _CONSOLE
 
    CleanUp();
@@ -236,10 +213,9 @@ void RaiseError( LPTSTR szTheErrorText )
 #ifndef _CONSOLE
 void LoadDialog( int Resource )
 {
-   hwndStatic = CreateDialog( ghInstance, MAKEINTRESOURCE( Resource ), hwndMain, ( DLGPROC ) ChildDialogProc );
+   hwndStatic = CreateDialog( ghInstance, MAKEINTRESOURCE( Resource ), hwndMain, ChildDialogProc );
    SetWindowPos( hwndStatic, HWND_TOP, 44, 70, 0, 0, SWP_NOSIZE );
-
-   return ;
+   SetFocus( hwndStatic );
 }
 #endif
 
@@ -281,24 +257,18 @@ INT_PTR FormatControl( HFONT *phf, HWND handle, HDC hDC, LONG lFontWeight, LONG 
 */
 void FormatText( HFONT *phf, HWND handle, LPTSTR szFontName, int iFontSize, BOOL bIsBold )
 {
-   HDC hDC = GetDC( handle );
-   if ( hDC )
+   LOGFONT lf;
+   if ( ( *phf == NULL ) && GetObject( GetWindowFont( handle ), sizeof lf, &lf ) )
    {
-      LOGFONT lf;
-      if ( ( *phf == NULL ) && GetObject( GetWindowFont( handle ), sizeof lf, &lf ) )
-      {
-         lf.lfWeight = FW_REGULAR;
-         lf.lfHeight = ( LONG ) iFontSize;
-         if ( bIsBold ) lf.lfWeight = FW_BOLD;
-         lstrcpy( lf.lfFaceName, szFontName );
-         *phf = CreateFontIndirect( &lf );
-      }
-      if ( *phf )
-      {
-         SetBkMode( hDC, OPAQUE );     //TRANSPARENT
-         SendMessage( handle, WM_SETFONT, ( WPARAM ) *phf, TRUE );
-      }
-      ReleaseDC( handle, hDC );
+      lf.lfWeight = FW_REGULAR;
+      lf.lfHeight = ( LONG ) iFontSize;
+      if ( bIsBold ) lf.lfWeight = FW_BOLD;
+      lstrcpy( lf.lfFaceName, szFontName );
+      *phf = CreateFontIndirect( &lf );
+   }
+   if ( *phf )
+   {
+      SendMessage( handle, WM_SETFONT, ( WPARAM ) *phf, TRUE );
    }
 }
 
@@ -360,14 +330,13 @@ void __cdecl WinMainCRTStartup( void )
 *********************************************************************************************
 ********************************************************************************************/
 
-
 /*
+
    lstrstr
 
    Finds a substring in str1
 
 */
-
 char *lstrstr( const char * str1, const char * str2 )
 {
    const char *cp = str1;
@@ -391,63 +360,6 @@ char *lstrstr( const char * str1, const char * str2 )
 
    return NULL;
 }
-
-
-
-/*
-   strnsub
-
-   Replaces a substring in pszString
-
-*/
-char *strnsub( char *pszString, char *pszPattern, char *pszReplacement, int iMaxLength )
-{
-   char * pszSubstring, *pszTmpSubstring ;
-
-   int iPatternLength, iReplacementLength ;
-
-   pszTmpSubstring = pszSubstring = pszString ;
-   iPatternLength = lstrlen( pszPattern ) ;
-   iReplacementLength = lstrlen( pszReplacement ) ;
-
-   if ( !lstrcmp( pszPattern, pszReplacement ) ) return 0;
-
-   //
-   // No match found
-   //
-   if ( NULL == ( pszSubstring = lstrstr( pszString, pszPattern ) ) ) return NULL;
-
-
-   //
-   // Is there enough space for replacement?
-   //
-   if ( ( int ) ( lstrlen( pszString ) + ( iReplacementLength - iPatternLength ) ) >= iMaxLength ) return NULL;
-
-
-   //
-   // Allocate memory
-   //
-   pszTmpSubstring = ( char * ) VirtualAlloc( NULL, iMaxLength * sizeof( char ), MEM_COMMIT, PAGE_READWRITE );
-
-
-   //
-   // Couldn't allocate memory
-   //
-   if ( pszTmpSubstring == NULL ) return NULL;
-
-   //
-   // Copy replacement
-   //
-   lstrcpy( pszTmpSubstring, pszSubstring + iPatternLength ) ;
-   while ( iReplacementLength-- ) * pszSubstring++ = *pszReplacement++ ;
-   lstrcpy( pszSubstring, pszTmpSubstring ) ;
-
-   VirtualFree( pszTmpSubstring, 0, MEM_RELEASE );
-
-   return ( pszSubstring - iPatternLength ) ;
-
-}
-
 
 /*
  
@@ -486,42 +398,6 @@ char *gettoken( char *in, char *delimiter, int tokennum, char *out )
    return delimiter;
 }
 
-
-char *lstrncat( char *front, char *back, size_t count )
-{
-   char * start = front;
-
-   while ( *front++ );
-   front--;
-
-   while ( count-- ) if ( !( *front++ = *back++ ) ) return ( start );
-
-   *front = '\0';
-   return ( start );
-}
-
-/*
- 
-   lstrrev
- 
-   Reverses a string. Used to remove dependance on the C runtime.
- 
-*/
-char *lstrrev( char *str )
-{
-   char * p1, *p2;
-
-   if ( ! str || ! *str )
-      return str;
-   for ( p1 = str, p2 = str + lstrlen( str ) - 1; p2 > p1; ++p1, --p2 )
-   {
-      *p1 ^= *p2;
-      *p2 ^= *p1;
-      *p1 ^= *p2;
-   }
-   return str;
-}
-
 /*
  
    IsExtension
@@ -546,18 +422,7 @@ BOOL IsExtension(char *exec, char *exten)
 */
 BOOL FileExists( LPTSTR szPathAndFile )
 {
-   // Remove leading and trailing quotes, if they exist
-   strnsub( szPathAndFile, "\"", "", MAX_PATH );
-   strnsub( szPathAndFile, "\"", "", MAX_PATH );
-
-#ifdef _WIN32
-   if ( GetFileAttributes( szPathAndFile ) == -1 ) return FALSE;
-   return TRUE;
-#else
-   if ( fopen( szPathAndFile, "r" ) == NULL ) return FALSE;
-   return TRUE;
-#endif 
-   return FALSE;
+   return ( GetFileAttributes( szPathAndFile ) & FILE_ATTRIBUTE_DIRECTORY ) == 0;
 }
 
 /*
@@ -567,10 +432,7 @@ BOOL FileExists( LPTSTR szPathAndFile )
 */
 BOOL DirectoryExists( LPTSTR szDirName )
 {
-   unsigned int nAttributes = 0;
-   if ( ( nAttributes = GetFileAttributes( szDirName ) ) == -1 ) return FALSE;
-   if ( ( nAttributes & FILE_ATTRIBUTE_DIRECTORY ) != 0 ) return TRUE;
-   return FALSE;
+   return ( GetFileAttributes( szDirName ) & ( FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_DIRECTORY ) ) == FILE_ATTRIBUTE_DIRECTORY;
 }
 
 /*
@@ -584,6 +446,7 @@ BOOL DirectoryExists( LPTSTR szDirName )
 void queryShellFolders( char *name, char *out )
 {
    HKEY hKey;
+   *out = '\0';
    if ( RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_READ, &hKey ) == ERROR_SUCCESS )
    {
       int l = MAX_PATH;
@@ -630,15 +493,16 @@ void ParsePath( char *input )
    int tokennum = 0;
    char *delimiter;
 
-   char szExpandedInput[ MAX_PATH ] = "";
-   char szCurToken[ MAX_PATH ] = "";
-   char output[ MAX_PATH ] = "";
+   char szExpandedInput[ MAX_PATH ];
+   char szCurToken[ MAX_PATH ];
+   char output[ MAX_PATH ];
+
+   *szExpandedInput = *szCurToken = *output = '\0';
 
    //
    // Replace all occurances of a dollar sign with a percent sign
    //
-   while ( lstrstr( input, "$" ) )
-      strnsub( input, "$", "%", MAX_PATH );
+   while ( ( delimiter = lstrstr( input, "$" ) ) != NULL ) *delimiter = '%';
 
    ExpandEnvironmentStrings( input, szExpandedInput, MAX_PATH );
 
@@ -654,9 +518,7 @@ void ParsePath( char *input )
       //
       if ( !lstrcmpi( szCurToken, "%startmenu%" ) )
       {
-         char buf[ MAX_PATH ] = "";
-         queryShellFolders( "Programs", buf );
-         lstrcpy( output, buf );
+         queryShellFolders( "Programs", output );
       }
 
       //
@@ -664,9 +526,7 @@ void ParsePath( char *input )
       //
       else if ( !lstrcmpi( szCurToken, "%desktop%" ) )
       {
-         char buf[ MAX_PATH ];
-         queryShellFolders( "Desktop", buf );
-         lstrcpy( output, buf );
+         queryShellFolders( "Desktop", output );
       }
 
       //
@@ -674,9 +534,7 @@ void ParsePath( char *input )
       //
       else if ( !lstrcmpi( szCurToken, "%sendto%" ) )
       {
-         char buf[ MAX_PATH ];
-         queryShellFolders( "SendTo", buf );
-         lstrcpy( output, buf );
+         queryShellFolders( "SendTo", output );
       }
 
       //
@@ -684,9 +542,7 @@ void ParsePath( char *input )
       //
       else if ( !lstrcmpi( szCurToken, "%favorites%" ) )
       {
-         char buf[ MAX_PATH ];
-         queryShellFolders( "Favorites", buf );
-         lstrcpy( output, buf );
+         queryShellFolders( "Favorites", output );
       }
 
       //
@@ -694,9 +550,7 @@ void ParsePath( char *input )
       //
       else if ( !lstrcmpi( szCurToken, "%startup%" ) )
       {
-         char buf[ MAX_PATH ];
-         queryShellFolders( "Startup", buf );
-         lstrcpy( output, buf );
+         queryShellFolders( "Startup", output );
       }
 
       //
@@ -712,9 +566,7 @@ void ParsePath( char *input )
       //
       else if ( !lstrcmpi( szCurToken, "%curdir%" ) )
       {
-         char buf[ MAX_PATH ];
-         GetCurrentDirectory( MAX_PATH, buf );
-         lstrcpy( output, buf );
+         GetCurrentDirectory( MAX_PATH, output );
       }
 
       //
@@ -723,19 +575,17 @@ void ParsePath( char *input )
       //
       else if ( !lstrcmpi( szCurToken, "%quicklaunch%" ) )
       {
-         char buf[ MAX_PATH ] = "";
-         queryShellFolders( "AppData", buf );
+         queryShellFolders( "AppData", output );
 
-         if ( lstrlen( buf ) > 0 )
+         if ( lstrlen( output ) > 0 )
          {
-            lstrcat( buf, "\\Microsoft\\Internet Explorer\\Quick Launch" );
+            lstrcat( output, "\\Microsoft\\Internet Explorer\\Quick Launch" );
          }
 
-         if ( !DirectoryExists( buf ) )
+         if ( !DirectoryExists( output ) )
          {
-            GetTempPath( MAX_PATH, buf );
+            GetTempPath( MAX_PATH, output );
          }
-         lstrcpy( output, buf );
       }
 
       //
@@ -744,17 +594,15 @@ void ParsePath( char *input )
       else if ( !lstrcmpi( szCurToken, "%programfiles%" ) )
       {
          HKEY hKey;
-         char buf[ MAX_PATH ];
 
-         lstrcpy( buf, "C:\\Program Files" );
+         lstrcpy( output, "C:\\Program Files" );
          if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", 0, KEY_READ, &hKey ) == ERROR_SUCCESS )
          {
-            int l = sizeof( buf );
+            int l = sizeof( output );
             int t = REG_SZ;
-            RegQueryValueEx( hKey, "ProgramFilesDir", NULL, &t, buf, &l );
+            RegQueryValueEx( hKey, "ProgramFilesDir", NULL, &t, output, &l );
             RegCloseKey( hKey );
          }
-         lstrcpy( output, buf );
       }
 
       //
@@ -762,9 +610,7 @@ void ParsePath( char *input )
       //
       else if ( !lstrcmpi( szCurToken, "%sysdir%" ) )
       {
-         char buf[ MAX_PATH ];
-         GetSystemDirectory( buf, MAX_PATH );
-         lstrcpy( output, buf );
+         GetSystemDirectory( output, MAX_PATH );
       }
 
       //
@@ -795,11 +641,13 @@ BOOL CreateDirectoryRecursively( LPTSTR szPath )
    int tokennum = 0;
    char *delimiter = NULL;
 
-   char szFullPath[ MAX_PATH + 3 ] = "";
-   char szTempPath[ MAX_PATH + 3 ] = "";
-   char szCurToken[ MAX_PATH + 3 ] = "";
+   char szFullPath[ MAX_PATH + 3 ];
+   char szTempPath[ MAX_PATH + 3 ];
+   char szCurToken[ MAX_PATH + 3 ];
 
    BOOL successful = TRUE;
+
+   *szFullPath = *szTempPath = *szCurToken = '\0';
 
    GetFullPathName( szPath, MAX_PATH, szFullPath, &delimiter );
    if (delimiter)
@@ -871,35 +719,32 @@ int memcmp( const void * buf1, const void * buf2, size_t count )
    Used for finding and replacing the icon in an SFX.
  
 */
-void replace_data( char *hdr, int hdr_len, char *srch, int srchlen, char *filename )
+void replace_data( char *hdr, int hdr_len, const char *srch, int srchlen, const char *filename )
 {
-   char temp[ 32 ];
+   HANDLE fp;
    DWORD dummy;
+   char temp[32];
 
-   HANDLE fp = CreateFile( filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
-   SetFilePointer( fp, 0, 0 , FILE_END );
+   srch += 32;
+   srchlen -= 32;
 
-   hdr_len -= srchlen - 32;
-   while ( hdr_len >= 0 )
+   while ( hdr_len >= srchlen  && memcmp( hdr, srch, srchlen ) )
    {
-      if ( !memcmp( hdr, srch + 32, srchlen - 32 ) ) break;
       hdr++;
       hdr_len--;
    }
 
    if ( hdr_len < 0 )
-   {
       RaiseError( "Could not set new icon." );
-      CloseHandle( fp );
-      return ;
-   }
 
-   SetFilePointer( fp, 0, 0 , FILE_BEGIN );
+   fp = CreateFile( filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
+   if ( fp == INVALID_HANDLE_VALUE )
+      RaiseError( "Could not set new icon." );
+
    ReadFile( fp, temp, 32, &dummy, NULL );
-   ReadFile( fp, srch + 32, srchlen - 32, &dummy, NULL );
-   CloseHandle( fp );
+   ReadFile( fp, hdr, srchlen, &dummy, NULL );
 
-   memcpy( hdr, srch + 32, srchlen - 32 );
+   CloseHandle( fp );
 }
 
 
@@ -927,14 +772,14 @@ DWORD CALLBACK Build( void *dummy )
 
    char *p, *q;
    HRSRC const hICON = FindResource(NULL, "setup.ico", RT_RCDATA);
-   char* const pchICON = (char*)LoadResource(NULL, hICON);
    DWORD const cchICON = SizeofResource(NULL, hICON);
+   char* const pchICON = (char*)LoadResource(NULL, hICON);
    HRSRC const hSTUB = FindResource(NULL, bSubsystem64 ?
       (bRunElevated ? "header64_elevated.exe" : "header64.exe") :
       (bRunElevated ? "header32_elevated.exe" : "header32.exe"),
       RT_RCDATA);
-   char* const pchSTUB = (char*)LoadResource(NULL, hSTUB);
    DWORD const cchSTUB = SizeofResource(NULL, hSTUB);
+   char* const pchSTUB = (char*)memcpy(_alloca(cchSTUB), LoadResource(NULL, hSTUB), cchSTUB);
 
    //
    // Read source zip file
@@ -1057,36 +902,19 @@ DWORD CALLBACK Build( void *dummy )
 
 
 /*
+
    CleanPath
  
    Remove all instances of a double slash.
+
 */
 void CleanPath( char *szPath )
 {
-   BOOL bIsUNCPath = FALSE;
-   int offset = 0;
-   char * szTemp = szPath;
-
-   //
-   // Handle UNC paths.
-   //
-   if ( szPath[ 0 ] == 0x5C && szPath[ 1 ] == 0x5C ) bIsUNCPath = TRUE;
-
-   //
-   // Replaces all occurances of a double slash with a single.
-   //
-   while ( lstrstr( szPath, "\\\\" ) )
-   {
-      strnsub( szPath, "\\\\", "\\", MAX_PATH );
-   }
-
-   //
-   // If it was a UNC path, replace the double splash back
-   //
-   if ( bIsUNCPath )
-   {
-      strnsub( szPath, "\\", "\\\\", MAX_PATH );
-   }
+   // For UNC paths, intentionally overlook the first double slash.
+   char *q = szPath[ 0 ] == '\\' && szPath[ 1 ] == '\\' ? szPath + 1 : szPath;
+   char *p = q;
+   while ( (*p = *q++) != '\0' )
+      if ( *p != '\\' || *q != '\\' ) ++p;
 }
 
 

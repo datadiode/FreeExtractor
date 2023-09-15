@@ -60,7 +60,8 @@ void OpenINI()
 {
    int i, n;
 
-   SetDlgItemText(hwndStatic, IDC_INIPATH, szINIPath);
+   GetFullPathName( szINIPath, MAX_PATH, szINIPath, NULL );
+   SetDlgItemText( hwndStatic, IDC_INIPATH, szINIPath );
 
    GetPrivateProfileString( "FE", "Title", "", szPackageName, 255, szINIPath );
    GetPrivateProfileString( "FE", "Website", "", szURL, 128, szINIPath );
@@ -88,41 +89,25 @@ void OpenINI()
 
    GetPrivateProfileSection( "Shortcuts", szShortcut, _countof(szShortcut), szINIPath );
 
-   while ( ListCount( &list_Shortcuts ) != 0 )
-      ListDeleteNode( &list_Shortcuts );
+   DestroyMenu( hShortcuts );
+   hShortcuts = CreatePopupMenu();
 
    for ( i = 0 ; szShortcut[ i ] != '\0' ; i += lstrlen( szShortcut + i ) + 1 )
    {
-      char szToken[ MAX_PATH ];
-      if ( *gettoken( szShortcut + i, "=", 0, szToken) && lstrcmpi(szToken, "Shortcut" ) == 0 )
+      char buf[ MAX_PATH * 2 ];
+      if ( *gettoken( buf + i, "=", 0, buf ) && lstrcmpi( buf, "Shortcut" ) == 0 )
       {
-         char szLocation[ MAX_PATH ];
-         char szTarget[ MAX_PATH ];
-
-         gettoken( szShortcut + i, "=", 1, szToken );
-         gettoken( szToken, "|", 0, szLocation );
-         gettoken( szToken, "|", 1, szTarget );
-
-         if ( *szLocation && *szTarget )
-         {
-            ListMoveLast( &list_Shortcuts );
-            ListPush( &list_Shortcuts, szLocation, szTarget, 0 );
-         }
+         gettoken( szShortcut + i, "=", 1, buf );
+         AppendMenu( hShortcuts, MF_STRING, 0, buf );
       }
    }
 }
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
-   int slashpos = 0;
-   char buf[ MAX_PATH ] = "";
+   char buf[ MAX_PATH ];
 
    ghInstance = hInstance;
-
-   //
-   // Initialize shortcut list
-   //
-   ListInit( &list_Shortcuts );
 
    //
    // Determine font to use
@@ -132,66 +117,35 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
    if ( DoesFontExist( "Segoe UI" ) )
    {
       lstrcpy( szActiveFont, "Segoe UI" );
-      iFontSize = 13;
    }
    else if ( DoesFontExist( "Tahoma" ) )
    {
       lstrcpy( szActiveFont, "Tahoma" );
-      iFontSize = 13;
    }
    else
    {
       lstrcpy( szActiveFont, "MS Shell Dlg" );
-      iFontSize = 13;
    }
 
    //
    // Build .ini and help file path strings
    //
-   GetModuleFileName( NULL, buf, MAX_PATH );
+   GetModuleFileName( NULL, buf, _countof(buf) );
    PathRemoveFileSpec( buf );
    PathCombine( szHelpPath, buf, "FEHelp.chm" );
    PathCombine( szINIPath, buf, "default.ini" );
 
-
    //
    // Load the default settings, if default.ini already exists.
    //
-   if ( FileExists( szINIPath ) )
-   {
-      OpenINI();
-   }
-   else
-   {
+   if ( !FileExists( szINIPath ) )
       *szINIPath = '\0';
-   }
-
-   //
-   // Check to see if a filename was passed from the command
-   // line. If so, skip the splash screen.
-   //
-   lstrcpy( buf, lpCmdLine );
-   StrTrim( buf, " \t\r\n" );
-
-   // remove leading and trailing quotes
-
-   PathUnquoteSpaces(buf);
-
-   if ( *buf && FileExists( buf ) )
-   {
-      char buf2[ MAX_PATH ] = "";
-      GetFullPathName( buf, MAX_PATH, buf2, NULL );
-      lstrcpy( szZipFileName, buf2 );
-      if (!IsZipFile(szZipFileName))
-         RaiseError ("The file you have specified is not a ZIP file.");
-      Open();
-   }
 
    //
    // We're done initializing. Show the main dialog.
    //
-   DialogBox( ghInstance, MAKEINTRESOURCE( IDD_TEMPLATE ), NULL, MainDlgProc );
-   return 1;
+   DialogBoxParam( ghInstance, MAKEINTRESOURCE( IDD_TEMPLATE ), NULL, MainDlgProc, (LPARAM) lpCmdLine );
+   return 0;
 }
 
 
@@ -200,7 +154,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
    switch ( message )
    {
    case WM_INITDIALOG:
-      SetDlgItemText(hDlg, IDC_TITLE, "FreeExtractor " VERSION);
+      SetDlgItemText( hDlg, IDC_TITLE, "FreeExtractor " VERSION );
       return TRUE;
 
    case WM_LBUTTONDOWN:
@@ -248,6 +202,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
          StretchBlt( ps.hdc, 8, 18, 43, 42, memdc, 0, 0, 43, 42, SRCCOPY );
 
          SelectObject( memdc, hbmpUnselected );
+         DeleteObject( hbmp );
          DeleteDC( memdc );
          EndPaint( hDlg, &ps );
          return TRUE;
@@ -271,7 +226,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
          return TRUE;
 
       case MAKEWPARAM( IDC_URL, STN_CLICKED ):
-         ShellExecute( hDlg, TEXT( "open" ), TEXT( "http://www.disoriented.com/" ), NULL, NULL, SW_SHOWNORMAL );
+         ShellExecute( hDlg, TEXT( "open" ), TEXT( WEBSITE_URL ), NULL, NULL, SW_SHOWNORMAL );
          return TRUE;
       }
       return TRUE;
@@ -289,43 +244,70 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 */
 INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
+   char *p, *q;
+
    switch ( message )
    {
    case WM_INITDIALOG:
       hwndMain = hDlg;
 
-      GetTempPath( MAX_PATH, szTempDir );
-
       SetTitle( "FreeExtractor Wizard" );
+      SetClassLongPtr( hDlg, GCLP_HICON, ( LONG_PTR ) LoadIcon( ghInstance, MAKEINTRESOURCE( IDI_SETUP1 ) ) );
 
       //
-      // Check to see if szZipFileName is already filled in (in the case of being passed
-      // from the command line.
+      // Check to see if a filename was passed from the command
+      // line. If so, skip the splash screen.
       //
-      if ( *szZipFileName )
+      p = ( char * ) lParam;
+      iCurrentPage = *p ? ZIP_PAGE : SPLASH_PAGE;
+      SetDialogPage();
+
+      for ( ; ( q = PathGetArgs( p ) ) > p ; p = q )
       {
-         iCurrentPage = 3;  // options page
-      }
-      else
-      {
-         iCurrentPage = 1;  // splash page
+         PathRemoveArgs( p );
+         PathRemoveBlanks( p );
+         PathUnquoteSpaces( p );
+         if ( PathMatchSpec( p, "*.zip" ) )
+         {
+            lstrcpy( szZipFileName, p );
+            if ( !IsZipFile( szZipFileName ) )
+               RaiseError( "The file you have specified is not a ZIP file." );
+            Open();
+         }
+         else if ( PathMatchSpec( p, "*.ini" ) )
+         {
+            lstrcpy( szINIPath, p );
+         }
       }
 
-      SetDialogPage( iCurrentPage );
-
-      SetClassLongPtr( hwndMain, GCLP_HICON, ( LONG_PTR ) LoadIcon( ghInstance, MAKEINTRESOURCE( IDI_SETUP1 ) ) );
+      if ( *szINIPath )
+         OpenINI();
 
       return TRUE;
 
+   case WM_MOUSEACTIVATE:
+      if (wParam != 1 && HIWORD(lParam) != WM_LBUTTONDOWN)
+         break;
+      // fall through
    case WM_LBUTTONDOWN:
-      PostMessage( hwndMain, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
+      PostMessage( hDlg, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
       return TRUE;
+
+   case WM_CONTEXTMENU:
+      {
+         POINT pt = { GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) };
+         HMENU hRightClick = LoadMenu( ghInstance, MAKEINTRESOURCE( IDR_MENU1 ) );
+         HMENU hmenuTrackPopup = GetSubMenu( hRightClick, 0 );
+         TrackPopupMenu( hmenuTrackPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ), 0, hDlg, NULL );
+         DestroyMenu( hRightClick );
+         return TRUE;
+      }
 
    case WM_PAINT:
       if ( iCurrentPage != SPLASH_PAGE )
       {
          PAINTSTRUCT ps;
-         HDC hdc = BeginPaint( hwndMain, &ps );
+         HDC hdc = BeginPaint( hDlg, &ps );
          HDC memdc = CreateCompatibleDC( NULL );
          HBITMAP hbmp = LoadBitmap( ghInstance, MAKEINTRESOURCE( IDB_BITMAP1 ) );
          HGDIOBJ hbmpUnselected = SelectObject( memdc, hbmp );
@@ -347,8 +329,9 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
                      SRCCOPY );
 
          SelectObject( memdc, hbmpUnselected );
+         DeleteObject( hbmp );
          DeleteDC( memdc );
-         EndPaint( hwndMain, &ps );
+         EndPaint( hDlg, &ps );
 
          return TRUE;
       }
@@ -376,28 +359,16 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
                }
             }
          }
+         DragFinish( hDrop );
       }
       return TRUE;
 
 #ifndef NO_HTML_HELP
    case WM_HELP:
-      {
-         int iHelpPage;
-         if ( iCurrentPage == SPLASH_PAGE ) iHelpPage = IDH_INTRO;
-         else if ( iCurrentPage == ZIP_PAGE ) iHelpPage = IDH_ZIP;
-         else if ( iCurrentPage == OPTIONS_PAGE ) iHelpPage = IDH_OPTIONS;
-         else if ( iCurrentPage == ADVANCED_OPTIONS_PAGE ) iHelpPage = IDH_ADVOPTIONS;
-         else if ( iCurrentPage == SHORTCUT_PAGE ) iHelpPage = IDH_SHORTCUTS;
-         else if ( iCurrentPage == ICON_PAGE ) iHelpPage = IDH_ICONSS;
-         else if ( iCurrentPage == CONFIRM_PAGE ) iHelpPage = IDH_CONFIRM;
-         else if ( iCurrentPage == PROGRESS_PAGE ) iHelpPage = IDH_BUILD;
-         else if ( iCurrentPage == FINISHED_PAGE ) iHelpPage = IDH_FINISH;
+      if ( HtmlHelp( hDlg, szHelpPath, HH_HELP_CONTEXT, iHelpIdArray[ iCurrentPage ] ) == NULL )
+         MessageBox( hDlg, "FEHelp.chm could not be found or loaded.", "Cannot load help", 0 );
 
-         if ( HtmlHelp( hwndMain, szHelpPath, HH_HELP_CONTEXT, iHelpPage ) == NULL )
-            MessageBox( hwndMain, "FEHelp.chm could not be found or loaded.", "Cannot load help", 0 );
-
-         return TRUE;
-      }
+      return TRUE;
 #endif
 
    case WM_CTLCOLORSTATIC:
@@ -416,21 +387,20 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       }
       return FALSE;
 
-   case WM_QUIT:
    case WM_CLOSE:
-      PostMessage( hwndMain, WM_COMMAND, IDC_CANCEL, 0 );
+      PostMessage( hDlg, WM_COMMAND, IDC_CANCEL, 0 );
       return TRUE;
 
    case WM_COMMAND:
       switch ( LOWORD( wParam ) )
       {
       case IDCANCEL:
-         if ( MessageBox( hwndMain, "Are you sure you want to exit?", "Confirm exit", MB_YESNO | MB_ICONEXCLAMATION ) == IDYES )
+         if ( MessageBox( hDlg, "Are you sure you want to exit?", "Confirm exit", MB_YESNO | MB_ICONEXCLAMATION ) == IDYES )
             CleanUp();
          return TRUE;
 
       case IDM_ABOUT:
-         DialogBox( ghInstance, MAKEINTRESOURCE( IDD_ABOUT ), hwndMain, AboutDlgProc );
+         DialogBox( ghInstance, MAKEINTRESOURCE( IDD_ABOUT ), hDlg, AboutDlgProc );
          return TRUE;
 
       case IDC_NEXT:
@@ -481,17 +451,17 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             *szExtractionPath = '\0';
             szShortcut[0] = szShortcut[1] = '\0';
 
-            DestroyIcon( hIcon );
-            ListInit( &list_Shortcuts );
+            DestroyMenu( hShortcuts );
+            hShortcuts = CreatePopupMenu();
 
             bAutoExtract = bOpenFolder = bDeleteFiles = FALSE;
 
-            SetDlgItemText( hwndMain, IDC_NEXT, "Next >" );
-            SetDlgItemText( hwndMain, IDC_CANCEL, "Cancel" );
+            SetDlgItemText( hDlg, IDC_NEXT, "Next >" );
+            SetDlgItemText( hDlg, IDC_CANCEL, "Cancel" );
             break;
          }
 
-         SetDialogPage( iCurrentPage );
+         SetDialogPage();
          return TRUE;
 
       case IDC_CANCEL:
@@ -506,8 +476,6 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 }
 
 
-
-
 /*
 
    SetDialogPage
@@ -515,14 +483,14 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
    Change the child dialog page
 
 */
-void SetDialogPage( int iPageNum )
+void SetDialogPage()
 {
-   int i;
+   int i, n;
    char *p;
 
    if ( hwndStatic != NULL ) DestroyWindow( hwndStatic );
 
-   LoadDialog( iDialogArray[ iPageNum ] );
+   LoadDialog( iDialogArray[ iCurrentPage ] );
 
    DragAcceptFiles( hwndMain, iCurrentPage == ZIP_PAGE );
 
@@ -570,14 +538,12 @@ void SetDialogPage( int iPageNum )
       break;
 
    case ZIP_PAGE:
-      EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), FALSE );
+      EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), *szEXEOutPath != '\0' );
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
 
       SetDlgItemText( hwndStatic, IDC_INIPATH, szINIPath );
       SetDlgItemText( hwndStatic, IDC_ZIPPATH, szZipFileName );
       SetDlgItemText( hwndStatic, IDC_EXEOUT, szEXEOutPath );
-
-      if (*szEXEOutPath ) EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
 
       DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
       DLGITEM_SETFONT( hwndStatic, IDC_INILABEL )
@@ -663,21 +629,21 @@ void SetDialogPage( int iPageNum )
    case PROGRESS_PAGE:
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), FALSE );
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
-      EnableWindow( GetDlgItem( hwndMain, IDC_CANCEL ), TRUE );
 
       //
       // Build shortcut string before build
       //
-      ListMoveFirst( &list_Shortcuts );
       p = szShortcut;
-      for ( i = 0 ; i < ListCount( &list_Shortcuts ) ; ++i )
+	   n = GetMenuItemCount( hShortcuts );
+      for ( i = 0 ; i < n ; ++i )
       {
-         p += wsprintf( p, "Shortcut=%s|%s", ListPeekShortcut( &list_Shortcuts ), ListPeekTarget( &list_Shortcuts ) ) + 1;
-         ListMoveNext( &list_Shortcuts );
+         char buf[MAX_PATH * 2];
+         GetMenuString( hShortcuts, i, buf, _countof(buf), MF_BYPOSITION );
+         p += wsprintf( p, "Shortcut=%s", buf ) + 1;
       }
       *p++ = '\0';
 
-      hExtractThread = CreateThread( NULL, 0, Build, NULL, 0, NULL );
+      CloseHandle( CreateThread( NULL, 0, Build, NULL, 0, NULL ) );
 
       DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
       DLGITEM_SETFONT( hwndStatic, IDC_STATUSLABEL )
@@ -687,7 +653,6 @@ void SetDialogPage( int iPageNum )
    case FINISHED_PAGE:
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
-      EnableWindow( GetDlgItem( hwndMain, IDC_CANCEL ), TRUE );
 
       SetDlgItemText( hwndMain, IDC_NEXT, "&New SFX" );
       SetDlgItemText( hwndMain, IDC_CANCEL, "&Finish" );
@@ -698,9 +663,6 @@ void SetDialogPage( int iPageNum )
       break;
    }
 }
-
-
-
 
 
 /*
@@ -716,13 +678,12 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
    {
    case WM_INITDIALOG:
       hwndStatic = hDlg;
-      SetFocus( GetDlgItem( hwndMain, IDC_NEXT ) );
 
       if ( iCurrentPage == SHORTCUT_PAGE )
       {
          LV_COLUMN lvColumn;
 
-         hWndListView = GetDlgItem( hwndStatic, IDC_LIST );
+         hWndListView = GetDlgItem( hDlg, IDC_LIST );
 
          lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
          lvColumn.fmt = LVCFMT_LEFT;
@@ -781,7 +742,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
                      //
                      // Enable the 'Remove' button
                      //
-                     EnableWindow( GetDlgItem( hwndStatic, IDC_REMOVE_SC ), TRUE );
+                     EnableWindow( GetDlgItem( hDlg, IDC_REMOVE_SC ), TRUE );
 
                      //
                      // Redraw
@@ -794,7 +755,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
                   //
                   // Disable the 'Remove' button
                   //
-                  EnableWindow( GetDlgItem( hwndStatic, IDC_REMOVE_SC ), FALSE );
+                  EnableWindow( GetDlgItem( hDlg, IDC_REMOVE_SC ), FALSE );
 
                }
             }
@@ -802,22 +763,11 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
          return TRUE;
       }
 
-   case WM_RBUTTONDOWN:
-      {
-         POINT pt = { GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) };
-         HMENU hRightClick = LoadMenu( ghInstance, MAKEINTRESOURCE( IDR_MENU1 ) );
-         HMENU hmenuTrackPopup = GetSubMenu( hRightClick, 0 );
-         ClientToScreen( hwndStatic, &pt );
-         TrackPopupMenu( hmenuTrackPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwndStatic, NULL );
-         DestroyMenu( hRightClick );
-         return TRUE;
-      }
-
    case WM_PAINT:
       if ( iCurrentPage == SPLASH_PAGE )
       {
          PAINTSTRUCT ps;
-         HDC hdc = BeginPaint( hwndStatic, &ps );
+         HDC hdc = BeginPaint( hDlg, &ps );
          HDC memdc = CreateCompatibleDC( NULL );
          HBITMAP hbmp = LoadBitmap( ghInstance, MAKEINTRESOURCE( IDB_INTRO ) );
          HGDIOBJ hbmpUnselected = SelectObject( memdc, hbmp );
@@ -839,8 +789,9 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
                      SRCCOPY );
 
          SelectObject( memdc, hbmpUnselected );
+         DeleteObject( hbmp );
          DeleteDC( memdc );
-         EndPaint( hwndStatic, &ps );
+         EndPaint( hDlg, &ps );
 
          return TRUE;
       }
@@ -848,7 +799,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
       if ( iCurrentPage == ICON_PAGE )
       {
          PAINTSTRUCT ps;
-         HDC hdc = BeginPaint ( hwndStatic, &ps );
+         HDC hdc = BeginPaint ( hDlg, &ps );
          SetBkMode( hdc, OPAQUE );
 
          if ( *szIconPath )
@@ -862,7 +813,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
             }
          }
 
-         EndPaint ( hwndStatic, &ps );
+         EndPaint ( hDlg, &ps );
 
          return TRUE;
       }
@@ -903,22 +854,9 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
       }
       return FALSE;
 
-   case WM_LBUTTONDOWN:
-      PostMessage( hwndMain, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
-      return TRUE;
-
    case WM_COMMAND:
       switch ( LOWORD( wParam ) )
       {
-      case IDCANCEL:
-         if ( MessageBox( hwndMain, "Are you sure you want to exit?", "Confirm exit", MB_YESNO | MB_ICONEXCLAMATION ) == IDYES )
-            CleanUp();
-         return TRUE;
-
-      case IDM_ABOUT:
-         DialogBox( ghInstance, MAKEINTRESOURCE( IDD_ABOUT ), hwndMain, AboutDlgProc );
-         return TRUE;
-
       case IDC_ADD_SC:
          //
          // Show 'Add Shortcut' dialog
@@ -932,21 +870,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
             //
             // Remove selected entry from the stack
             //
-            int i = 0;
-            int x = 4;
-            ListMoveFirst( &list_Shortcuts );
-
-            while ( i < ListCount( &list_Shortcuts ) )
-            {
-               if ( iSelectedIndex == ListPeekUID( &list_Shortcuts ) )
-               {
-                  ListDeleteNode( &list_Shortcuts );
-                  break;
-               }
-               ListMoveNext( &list_Shortcuts );
-               i++;
-            }
-
+            DeleteMenu( hShortcuts, iSelectedIndex, MF_BYPOSITION );
             RefreshShortcuts();
             return TRUE;
          }
@@ -987,7 +911,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
                   RECT const rect = { 78, 82, 124, 128 };
                   lstrcpy( szIconPath, szIconPathTemp );
                   bChangeIcon = TRUE;
-                  InvalidateRect( hwndStatic, &rect, FALSE );
+                  InvalidateRect( hDlg, &rect, FALSE );
                }
             }
             return TRUE;
@@ -996,9 +920,9 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
       case IDC_EXEC:
          {
             TCHAR szTemp[MAX_PATH];
-            GetDlgItemText( hwndStatic, IDC_EXEC, szTemp, _countof(szTemp) );
+            GetDlgItemText( hDlg, IDC_EXEC, szTemp, _countof(szTemp) );
             StrTrim( szTemp, " \t\r\n" );
-            EnableWindow( GetDlgItem( hwndStatic, IDC_DELETEFILES ), *szTemp != '\0' );
+            EnableWindow( GetDlgItem( hDlg, IDC_DELETEFILES ), *szTemp != '\0' );
             return TRUE;
          }
 
@@ -1010,23 +934,23 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
          return TRUE;
 
       case IDC_RUNELEVATED:
-         bRunElevated = IsDlgButtonChecked( hwndStatic, IDC_RUNELEVATED );
+         bRunElevated = IsDlgButtonChecked( hDlg, IDC_RUNELEVATED );
          return TRUE;
 
       case IDC_SUBSYSTEM64:
-         bSubsystem64 = IsDlgButtonChecked( hwndStatic, IDC_SUBSYSTEM64 );
+         bSubsystem64 = IsDlgButtonChecked( hDlg, IDC_SUBSYSTEM64 );
          return TRUE;
 
       case IDC_AUTOEXTRACT:
-         bAutoExtract = IsDlgButtonChecked( hwndStatic, IDC_AUTOEXTRACT );
+         bAutoExtract = IsDlgButtonChecked( hDlg, IDC_AUTOEXTRACT );
          return TRUE;
 
       case IDC_OPENFOLDER:
-         bOpenFolder = IsDlgButtonChecked( hwndStatic, IDC_OPENFOLDER );
+         bOpenFolder = IsDlgButtonChecked( hDlg, IDC_OPENFOLDER );
          return TRUE;
 
       case IDC_DELETEFILES:
-         bDeleteFiles = IsDlgButtonChecked( hwndStatic, IDC_DELETEFILES );
+         bDeleteFiles = IsDlgButtonChecked( hDlg, IDC_DELETEFILES );
          return TRUE;
 
       case IDC_OPEN:
@@ -1083,15 +1007,14 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
 */
 void Open()
 {
+   GetFullPathName( szZipFileName, MAX_PATH, szZipFileName, NULL );
    if ( DirectoryExists( szZipFileName ) )
    {
       //
       // The user drag-and-dropped a directory. Handle gracefully.
       //
       *szZipFileName = '\0';
-
-      MessageBox( NULL, "Directories are not supported. Select a .zip file.", "FreeExtractor Error", 0 );
-      return;
+      MessageBox( hwndMain, "Directories are not supported. Select a .zip file.", "FreeExtractor Error", 0 );
    }
 
    SetDlgItemText( hwndStatic, IDC_ZIPPATH, szZipFileName );
@@ -1124,6 +1047,8 @@ void Open()
 */
 void SetConfirmMessage()
 {
+   int n;
+
    if ( !bAutoExtract )
    {
       lstrcpy( szConfirmMessage, "The user will be given the option to enter a path to extract the files to" );
@@ -1188,16 +1113,17 @@ void SetConfirmMessage()
    if ( bDeleteFiles )
       lstrcat( szConfirmMessage, " When completed, the extracted files will be deleted." );
 
-   if ( ListCount( &list_Shortcuts ) > 0 )
+   n = GetMenuItemCount( hShortcuts );
+   if ( n > 0 )
    {
-      if ( ListCount( &list_Shortcuts ) == 1 )
+      if ( n == 1 )
       {
          lstrcat( szConfirmMessage, " Then, the shortcut you specified will be created." );
       }
       else
       {
-         char buf[ 255 ] = "";
-         wsprintf( buf, " Then, the %d shortcuts you specified will be created.", ListCount( &list_Shortcuts ) );
+         char buf[ 255 ];
+         wsprintf( buf, " Then, the %d shortcuts you specified will be created.", n );
          lstrcat( szConfirmMessage, buf );
       }
    }
@@ -1216,7 +1142,7 @@ void SetConfirmMessage()
 */
 void RefreshShortcuts()
 {
-   int i;
+   int i, n;
    LV_ITEM lvI;
 
    //
@@ -1229,27 +1155,26 @@ void RefreshShortcuts()
    lvI.state = 0;
    lvI.pszText = "";
 
-   ListMoveFirst( &list_Shortcuts );
    i = 0;
-   while ( i < ListCount( &list_Shortcuts ) )
+   n = GetMenuItemCount( hShortcuts );
+   for ( i = 0 ; i < n ; ++i )
    {
+      char buf[MAX_PATH * 2];
+      char location[ MAX_PATH ];
+      char target[ MAX_PATH ];
+
+      GetMenuString( hShortcuts, i, buf, _countof(buf), MF_BYPOSITION );
+
+      //
+      // Expand the path variables for the shortcut
+      //
+      gettoken( buf, "|", 0, location );
+      gettoken( buf, "|", 1, target );
       lvI.iItem = i;
-      lvI.pszText = ListPeekShortcut( &list_Shortcuts );
+      lvI.pszText = location;
 
       ListView_InsertItem( hWndListView, &lvI );
-      ListSetUID( &list_Shortcuts, i );
-      ListMoveNext( &list_Shortcuts );
-      i++;
-   }
-
-   ListMoveFirst( &list_Shortcuts );
-   i = 0;
-
-   while ( i < ListCount( &list_Shortcuts ) )
-   {
-      ListView_SetItemText( hWndListView, i, 1, ListPeekTarget( &list_Shortcuts ) );
-      ListMoveNext( &list_Shortcuts );
-      i++;
+      ListView_SetItemText( hWndListView, i, 1, target );
    }
 }
 
@@ -1261,8 +1186,6 @@ INT_PTR CALLBACK ShortcutDlgProc ( HWND hDlg, UINT message, WPARAM wParam, LPARA
    switch ( message )
    {
    case WM_INITDIALOG:
-      hWndListView = GetDlgItem( hwndStatic, IDC_LIST );
-
       DLGITEM_SETFONT( hDlg, IDC_MAINTEXT );
       DLGITEM_SETFONT( hDlg, IDC_SHORTCUTLABEL );
       DLGITEM_SETFONT( hDlg, IDC_SCLOCATION );
@@ -1272,7 +1195,6 @@ INT_PTR CALLBACK ShortcutDlgProc ( HWND hDlg, UINT message, WPARAM wParam, LPARA
       DLGITEM_SETFONT( hDlg, IDC_TARGETEXAMPLE );
       DLGITEM_SETFONT( hDlg, IDOK );
       DLGITEM_SETFONT( hDlg, IDCANCEL );
-
       return TRUE;
 
 #ifndef NO_HTML_HELP
@@ -1282,18 +1204,13 @@ INT_PTR CALLBACK ShortcutDlgProc ( HWND hDlg, UINT message, WPARAM wParam, LPARA
       return TRUE;
 #endif
 
-   case WM_QUIT:
-   case WM_CLOSE:
-      PostMessage( hwndMain, WM_COMMAND, IDC_CANCEL, 0 );
-      return TRUE;
-
    case WM_COMMAND:
       switch ( LOWORD( wParam ) )
       {
       case IDOK:
          {
-            char szLocation[ MAX_PATH ] = "";
-            char szTarget[ MAX_PATH ] = "";
+            char szLocation[ MAX_PATH ];
+            char szTarget[ MAX_PATH ];
 
             //
             // Save Settings
@@ -1304,11 +1221,11 @@ INT_PTR CALLBACK ShortcutDlgProc ( HWND hDlg, UINT message, WPARAM wParam, LPARA
             StrTrim( szLocation, " \t\r\n" );
             StrTrim( szTarget, " \t\r\n" );
 
-            ListMoveLast( &list_Shortcuts );
-
             if ( *szLocation && *szTarget )
             {
-               ListPush( &list_Shortcuts, szLocation, szTarget, 0 );
+               char buf[ MAX_PATH * 2 ];
+               wsprintf( buf, "%s|%s", szLocation, szTarget );
+               AppendMenu( hShortcuts, MF_STRING, 0, buf );
             }
 
             //

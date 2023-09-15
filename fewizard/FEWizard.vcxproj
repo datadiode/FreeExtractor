@@ -88,14 +88,6 @@
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Midl>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MkTypLibCompatible>true</MkTypLibCompatible>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\output/FEWizard.tlb</TypeLibraryName>
-      <HeaderFileName />
-    </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -112,7 +104,6 @@
       <AdditionalDependencies>htmlhelp.lib;comctl32.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention />
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
@@ -122,14 +113,6 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture).
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Midl>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MkTypLibCompatible>true</MkTypLibCompatible>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <TypeLibraryName>.\..\output/FEWizard.tlb</TypeLibraryName>
-      <HeaderFileName>
-      </HeaderFileName>
-    </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -145,8 +128,6 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture).
       <AdditionalDependencies>htmlhelp.lib;comctl32.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>
-      </DataExecutionPrevention>
     </Link>
     <PostBuildEvent>
       <Command>mt.exe -manifest "$(SolutionDir)common\asInvoker.manifest" -outputresource:"$(TargetPath)"
@@ -155,13 +136,6 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture).
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Midl>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\output/FEWizard.tlb</TypeLibraryName>
-      <HeaderFileName />
-    </Midl>
     <ClCompile>
       <Optimization>MinSpace</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
@@ -183,7 +157,6 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture).
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention />
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
@@ -193,13 +166,6 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture).
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Midl>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <TypeLibraryName>.\..\output/FEWizard.tlb</TypeLibraryName>
-      <HeaderFileName>
-      </HeaderFileName>
-    </Midl>
     <ClCompile>
       <Optimization>MinSpace</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
@@ -221,8 +187,6 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture).
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>
-      </DataExecutionPrevention>
     </Link>
     <PostBuildEvent>
       <Command>mt.exe -manifest "$(SolutionDir)common\asInvoker.manifest" -outputresource:"$(TargetPath)"
@@ -232,13 +196,11 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture).
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\FEWizard.c" />
-    <ClCompile Include="src\list.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\FEcommon.h" />
     <ClInclude Include="src\FEHelp.h" />
     <ClInclude Include="src\FEWizard.h" />
-    <ClInclude Include="src\list.h" />
     <ClInclude Include="src\resource.h" />
   </ItemGroup>
   <ItemGroup>

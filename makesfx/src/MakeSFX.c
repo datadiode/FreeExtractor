@@ -229,8 +229,7 @@ int main( int argc, char *argv[] )
       isError = TRUE;
       iErrorCount++;
    }
-
-   if ( !FileExists( szZipFileName ) && strlen( szZipFileName ) != 0 )
+   else if ( !FileExists( szZipFileName ) )
    {
       printf( "¯ ERROR: The source zip file could not be found.\n" );
       isError = TRUE;
@@ -243,9 +242,7 @@ int main( int argc, char *argv[] )
       isError = TRUE;
       iErrorCount++;
    }
-
-
-   if ( !bOverWrite && FileExists( szEXEOutPath ) )
+   else if ( !bOverWrite && FileExists( szEXEOutPath ) )
    {
       printf( "¯ ERROR: The output EXE already exists. Use the /overwrite option to overwrite.\n" );
       isError = TRUE;

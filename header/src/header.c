@@ -34,6 +34,7 @@
 #include "resource.h"
 
 
+
 /*
 
    WinMain
@@ -46,8 +47,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
    //
    // Initialize the stacks
    //
-   stkInit( &stk_ExtractedFiles );
-   stkInit( &stk_Shortcuts );
+   hShortcuts = CreatePopupMenu();
 
    //
    // Initialize the app
@@ -63,61 +63,39 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
       // Be sure output directory exists
       //
       if ( !CreateDirectoryRecursively( szTargetDirectory ) )
-      {
          RaiseError( "Couldn't create output directory." );
-         return 1;
-      }
 
       //
       // Extract
       //
       Extract( NULL );
-
-      //
-      // Execute post-extraction command
-      //
-      ExecCommand();
-
-      //
-      // Open Folder
-      //
-      if ( bOpenFolder )
-         OpenExplorerFolder( szTargetDirectory );
-
-      //
-      // We're done.
-      //
-      CleanUp();
-      return 1;
-   }
-
-   //
-   // Determine font to use
-   //
-   // If Tahoma exists, use it. Else, default to "MS Shell Dlg"
-   //
-   if ( DoesFontExist( "Segoe UI" ) )
-   {
-      lstrcpy( szActiveFont, "Segoe UI" );
-      iFontSize = 13;
-   }
-   else if ( DoesFontExist( "Tahoma" ) )
-   {
-      lstrcpy( szActiveFont, "Tahoma" );
-      iFontSize = 13;
    }
    else
    {
-      lstrcpy( szActiveFont, "MS Shell Dlg" );
-      iFontSize = 13;
+      //
+      // Determine font to use
+      //
+      // If Tahoma exists, use it. Else, default to "MS Shell Dlg"
+      //
+      if (DoesFontExist("Segoe UI"))
+      {
+         lstrcpy(szActiveFont, "Segoe UI");
+      }
+      else if (DoesFontExist("Tahoma"))
+      {
+         lstrcpy(szActiveFont, "Tahoma");
+      }
+      else
+      {
+         lstrcpy(szActiveFont, "MS Shell Dlg");
+      }
+
+      //
+      // Normal (GUI'ed) usage: Show the main dialog box
+      //
+      DialogBox(ghInstance, MAKEINTRESOURCE(IDD_TEMPLATE), NULL, MainDlgProc);
    }
-
-   //
-   // Normal (GUI'ed) usage: Show the main dialog box
-   //
-   DialogBox( ghInstance, MAKEINTRESOURCE( IDD_TEMPLATE ), NULL, MainDlgProc );
-
-   return 1;
+   return 0;
 }
 
 
@@ -127,7 +105,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
    switch ( message )
    {
    case WM_INITDIALOG:
-      SetDlgItemText(hDlg, IDC_TITLE, "FreeExtractor " VERSION);
+      SetDlgItemText( hDlg, IDC_TITLE, "FreeExtractor " VERSION );
       return TRUE;
 
    case WM_LBUTTONDOWN:
@@ -137,21 +115,21 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
    case WM_CTLCOLORSTATIC:
       switch ( GetDlgCtrlID( ( HWND ) lParam ) )
       {
-	  case IDC_URL:
-		 {
-			static HFONT hFont = NULL;
-			return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, 13, _TEXT_BLUE_, "MS Shell Dlg", TRUE, OPAQUE, WHITE_BRUSH );
-		 }
-	  case IDC_TITLE:
-		 {
-			static HFONT hFont = NULL;
+      case IDC_URL:
+         {
+            static HFONT hFont = NULL;
+            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, 13, _TEXT_BLUE_, "MS Shell Dlg", TRUE, OPAQUE, WHITE_BRUSH );
+         }
+      case IDC_TITLE:
+         {
+            static HFONT hFont = NULL;
             return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_BOLD, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-		 }
-	  case IDC_TEXT:
-		 {
-			static HFONT hFont = NULL;
+         }
+      case IDC_TEXT:
+         {
+            static HFONT hFont = NULL;
             return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-		 }
+         }
       }
       return FALSE;
 
@@ -174,8 +152,9 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
          //
          StretchBlt( ps.hdc, 8, 18, 43, 42, memdc, 0, 0, 43, 42, SRCCOPY );
 
-		 SelectObject( memdc, hbmpUnselected );
-		 DeleteDC( memdc );
+         SelectObject( memdc, hbmpUnselected );
+         DeleteObject( hbmp );
+         DeleteDC( memdc );
          EndPaint( hDlg, &ps );
          return TRUE;
       }
@@ -197,15 +176,14 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
          EndDialog( hDlg, 1 );
          return TRUE;
 
-	  case MAKEWPARAM( IDC_URL, STN_CLICKED ):
-         ShellExecute( hDlg, TEXT( "open" ), TEXT( "http://www.disoriented.com/" ), NULL, NULL, SW_SHOWNORMAL );
+      case MAKEWPARAM( IDC_URL, STN_CLICKED ):
+         ShellExecute( hDlg, TEXT( "open" ), TEXT( WEBSITE_URL ), NULL, NULL, SW_SHOWNORMAL );
          return TRUE;
       }
       return TRUE;
    }
    return FALSE;
 }
-
 
 
 
@@ -226,7 +204,7 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       //
       // Set the correct (child) dialog page
       //
-      SetDialogPage( 1 );
+      SetDialogPage();
 
       //
       // Set the window title
@@ -242,23 +220,23 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       //
       // Set the window icon
       //
-      SetClassLongPtr( hwndMain, GCLP_HICON, ( LONG_PTR ) LoadIcon( ghInstance, MAKEINTRESOURCE( IDI_SETUP1 ) ) );
-
-      ShowWindow( hwndMain, SW_SHOW );
+      SetClassLongPtr( hDlg, GCLP_HICON, ( LONG_PTR ) LoadIcon( ghInstance, MAKEINTRESOURCE( IDI_SETUP1 ) ) );
 
       return TRUE;
 
+   case WM_MOUSEACTIVATE:
+      if (wParam != 1 && HIWORD(lParam) != WM_LBUTTONDOWN)
+         break;
+      // fall through
    case WM_LBUTTONDOWN:
-      PostMessage( hwndMain, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
+      PostMessage( hDlg, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
       return TRUE;
 
-   case WM_RBUTTONDOWN:
+   case WM_CONTEXTMENU:
       {
-		 POINT pt = { GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) };
          HMENU hRightClick = LoadMenu( ghInstance, MAKEINTRESOURCE( IDR_MENU1 ) );
          HMENU hmenuTrackPopup = GetSubMenu( hRightClick, 0 );
-         ClientToScreen( hwndMain, &pt );
-         TrackPopupMenu( hmenuTrackPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwndMain, NULL );
+         TrackPopupMenu( hmenuTrackPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ), 0, hDlg, NULL );
          DestroyMenu( hRightClick );
          return TRUE;
       }
@@ -266,16 +244,16 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
    case WM_CTLCOLORSTATIC:
       switch ( GetDlgCtrlID( ( HWND ) lParam ) )
       {
-	  case IDC_BANNER:
-		 {
-			static HFONT hFont = NULL;
+      case IDC_BANNER:
+         {
+            static HFONT hFont = NULL;
             return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_BOLD, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-		 }
-	  case IDC_SUBBANNER:
-		 {
-			static HFONT hFont = NULL;
+         }
+      case IDC_SUBBANNER:
+         {
+            static HFONT hFont = NULL;
             return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-		 }
+         }
       }
       return FALSE;
 
@@ -283,7 +261,7 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       if ( iCurrentPage != SPLASH_PAGE )
       {
          PAINTSTRUCT ps;
-         HDC hdc = BeginPaint( hwndMain, &ps );
+         HDC hdc = BeginPaint( hDlg, &ps );
          HDC memdc = CreateCompatibleDC( NULL );
          HBITMAP hbmp = LoadBitmap( ghInstance, MAKEINTRESOURCE( IDB_BITMAP1 ) );
          HGDIOBJ hbmpUnselected = SelectObject( memdc, hbmp );
@@ -299,57 +277,60 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
          //
 
          StretchBlt( ps.hdc,
-					 DLG_X_SCALE( 440 ), DLG_Y_SCALE( 9 ),
-					 43, 42,
-					 memdc,
-					 0, 0, 43, 42,
-					 SRCCOPY );
+                     DLG_X_SCALE( 440 ), DLG_Y_SCALE( 9 ),
+                     43, 42,
+                     memdc,
+                     0, 0, 43, 42,
+                     SRCCOPY );
 
-		 SelectObject( memdc, hbmpUnselected );
+         SelectObject( memdc, hbmpUnselected );
+         DeleteObject( hbmp );
          DeleteDC( memdc );
-         EndPaint( hwndMain, &ps );
+         EndPaint( hDlg, &ps );
          return TRUE;
       }
-
       return FALSE;
 
    case WM_QUIT:
    case WM_CLOSE:
-      PostMessage( hwndMain, WM_COMMAND, IDC_CANCEL, 0 );
+      PostMessage( hDlg, WM_COMMAND, IDC_CANCEL, 0 );
       return TRUE;
 
    case WM_COMMAND:
       switch ( LOWORD( wParam ) )
       {
       case IDCANCEL:
-         if ( MessageBox( hwndMain, "Are you sure you want to exit?", "Confirm exit", MB_YESNO | MB_ICONEXCLAMATION ) == IDYES )
+         if ( MessageBox( hDlg, "Are you sure you want to exit?", "Confirm exit", MB_YESNO | MB_ICONEXCLAMATION ) == IDYES )
             CleanUp();
          return TRUE;
 
       case IDC_NEXT:
-         //
-         // If bAutoExtract, skip the path dialog
-         //
-         if ( iCurrentPage == SPLASH_PAGE && bAutoExtract ) iCurrentPage++;
-
-
-         //
-         // They've chosen an output directory, and they're ready to extract.
-         //
-         if ( iCurrentPage == EXTRACT_PAGE )
+         switch ( iCurrentPage )
          {
+         case SPLASH_PAGE:
+            //
+            // If bAutoExtract, skip the path dialog
+            //
+            if ( !bAutoExtract )
+               break;
+            iCurrentPage = EXTRACT_PAGE;
+            // fall through
+         case EXTRACT_PAGE:
+            //
+            // They've chosen an output directory, and they're ready to extract.
+            //
             CleanPath( szTargetDirectory );
 
             if ( bAutoExtract )
-			{
-			   lstrcat( szTargetDirectory, "\\" );
+            {
+               lstrcat( szTargetDirectory, "\\" );
                CreateDirectoryRecursively( szTargetDirectory );
-			}
+            }
             else
-			{
+            {
                GetDlgItemText( hwndStatic, IDC_EXTRACTPATH, szTargetDirectory, MAX_PATH );
-			   lstrcat( szTargetDirectory, "\\" );
-			}
+               lstrcat( szTargetDirectory, "\\" );
+            }
 
             //
             // If directory doesn't already exist ...
@@ -366,46 +347,26 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
                   //
                   if ( MessageBox( hDlg, "The target directory doesn't exist. Create it?", "Create Directory?", MB_YESNO | MB_ICONQUESTION ) != IDYES )
                      return TRUE;
-
                }
                //
                // The "auto create dir" checkbox *is* checked. If it doesn't exist, try to create it.
                //
                CreateDirCheckError( szTargetDirectory );
             }
+            break;
          }
-
-         //
-         // If we're on the last dialog page ...
-         //
-         if ( iCurrentPage == PROGRESS_PAGE )
-         {
-            //
-            // Execute the command (if any)
-            //
-            ExecCommand();
-
-            //
-            // Open the folder in Explorer
-            //
-            if ( bOpenFolder )
-               OpenExplorerFolder( szTargetDirectory );
-
-            CleanUp();
-         }
-
 
          iCurrentPage++;
-         SetDialogPage( iCurrentPage );
+         SetDialogPage();
          return TRUE;
 
       case IDM_ABOUT:
-         DialogBox( ghInstance, MAKEINTRESOURCE( IDD_ABOUT ), hwndMain, AboutDlgProc );
+         DialogBox( ghInstance, MAKEINTRESOURCE( IDD_ABOUT ), hDlg, AboutDlgProc );
          return TRUE;
 
       case IDC_BACK:
          iCurrentPage--;
-         SetDialogPage( iCurrentPage );
+         SetDialogPage();
          return TRUE;
 
       case IDC_CANCEL:
@@ -413,11 +374,8 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
          return TRUE;
       }
    }
-
    return FALSE;
 }
-
-
 
 
 
@@ -446,10 +404,6 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
       }
       return FALSE;
 
-   case WM_LBUTTONDOWN:
-      PostMessage( hwndMain, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
-      return TRUE;
-
    case WM_PAINT:
       if ( iCurrentPage == SPLASH_PAGE )
       {
@@ -475,36 +429,14 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
                      0, 0, 163, 312,
                      SRCCOPY );
 
-		 SelectObject( memdc, hbmpUnselected );
+         SelectObject( memdc, hbmpUnselected );
+         DeleteObject( hbmp );
          DeleteDC( memdc );
          EndPaint( hwndStatic, &ps );
 
          return TRUE;
       }
       return FALSE;
-
-   case WM_RBUTTONDOWN:
-      {
-         //
-         // Show about menu
-         //
-         POINT pt;
-         HMENU hmenuTrackPopup;
-         HMENU hRightClick = LoadMenu( ghInstance, MAKEINTRESOURCE( IDR_MENU1 ) );
-
-         pt.x = LOWORD( lParam );
-         pt.y = HIWORD( lParam );
-
-         ClientToScreen( hwndStatic, ( LPPOINT ) & pt );
-
-         hmenuTrackPopup = GetSubMenu( hRightClick, 0 );
-         TrackPopupMenu( hmenuTrackPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwndStatic, NULL );
-
-         DestroyMenu( hmenuTrackPopup );
-         DestroyMenu( hRightClick );
-
-         return TRUE;
-      }
 
    case WM_CTLCOLORSTATIC:
       //
@@ -514,32 +446,28 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
       {
          switch ( GetDlgCtrlID( ( HWND ) lParam ) )
          {
-		 case IDC_SUBBANNER:
-			{
-			   static HFONT hFont = NULL;
-			   return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-			}
+         case IDC_SUBBANNER:
+            {
+               static HFONT hFont = NULL;
+               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
+            }
          case IDC_INTROBANNER:
-			{
-			   static HFONT hFont = NULL;
+            {
+               static HFONT hFont = NULL;
                return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_BOLD, 22, _TEXT_BLUE_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-			}
+            }
          case IDC_URL:
             {
-			   static HFONT hFont = NULL;
-			   return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, 13, _TEXT_BLUE_, "MS Shell Dlg", TRUE, OPAQUE, WHITE_BRUSH );
-			}
-		 }
+               static HFONT hFont = NULL;
+               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, 13, _TEXT_BLUE_, "MS Shell Dlg", TRUE, OPAQUE, WHITE_BRUSH );
+            }
+         }
       }
       return FALSE;
 
    case WM_COMMAND:
       switch ( LOWORD( wParam ) )
       {
-      case IDM_ABOUT:
-         DialogBox( ghInstance, MAKEINTRESOURCE( IDD_ABOUT ), hwndMain, AboutDlgProc );
-         return TRUE;
-
       case IDC_GLYPHBROWSE:
          {
             //
@@ -568,17 +496,16 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
             return TRUE;
          }
 
-	  case IDC_URL:
-		 if ( HIWORD(wParam) == STN_CLICKED && *szURL != '\0' )
-		 {
+      case IDC_URL:
+         if ( HIWORD(wParam) == STN_CLICKED && *szURL != '\0' )
+         {
             ShellExecute( hDlg, TEXT( "open" ), szURL, NULL, NULL, SW_SHOWNORMAL );
-		 }
-		 return TRUE;
+         }
+         return TRUE;
       }
    }
    return FALSE;
 }
-
 
 
 /*
@@ -615,7 +542,6 @@ static size_t file_write_func(void *pOpaque, mz_uint64 file_ofs, const void *pBu
 }
 
 
-
 /*
 
    Extract
@@ -625,97 +551,182 @@ static size_t file_write_func(void *pOpaque, mz_uint64 file_ofs, const void *pBu
 */
 DWORD CALLBACK Extract( void *dummy )
 {
-   HWND hProgress;
-   unsigned int i, n;
-   char szTempDirBuffer[MAX_PATH * 2];
-   char szStatusMessage[ 255 ];
-
    mz_zip_archive zip_archive;
-   memset(&zip_archive, 0, sizeof zip_archive);
+   mz_uint i, n;
 
-   //
-   // Open this self extractor
-   //
-   GetFullPathName(szTargetDirectory, MAX_PATH, szTargetDirectory, NULL);
-
+   memset( &zip_archive, 0, sizeof zip_archive );
    zip_archive.m_pIO_opaque = hFile;
    zip_archive.m_pRead = file_read_func;
 
    //
    // Attempt to get global (zip) info
    //
-   if (!mz_zip_reader_init(&zip_archive, iZipSize, 0))
-      RaiseError("Could not read SFX info. It's likely corrupt.");
+   if ( !mz_zip_reader_init( &zip_archive, iZipSize, 0 ) )
+      RaiseError( "Could not read SFX info. It's likely corrupt." );
 
-   n = mz_zip_reader_get_num_files(&zip_archive);
+   n = mz_zip_reader_get_num_files( &zip_archive );
+
+   //
+   // Open this self extractor
+   //
+   GetFullPathName( szTargetDirectory, MAX_PATH, szTargetDirectory, NULL );
 
    //
    // Prepare progress bar
    //
-   hProgress = GetDlgItem(hwndStatic, IDC_PROGRESSBAR);
-   SendMessage(hProgress, PBM_SETRANGE, 0, MAKELPARAM(0, n));
+   SendDlgItemMessage( hwndStatic, IDC_PROGRESSBAR, PBM_SETSTEP, 1, 0 );
+   SendDlgItemMessage( hwndStatic, IDC_PROGRESSBAR, PBM_SETRANGE, 0, MAKELPARAM( 0, n ) );
 
    //
    // Enumerate files
    //
-   for (i = 0; i < n; ++i)
+   for ( i = 0 ; i < n ; ++i )
    {
+      char szTempDirBuffer[ MAX_PATH * 2 ];
+      char szStatusMessage[ MAX_PATH + 30 ];
+
       mz_zip_archive_file_stat file_stat;
-      if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-         RaiseError("Could not get file info. This archive is likely corrupted.");
+      if ( !mz_zip_reader_file_stat( &zip_archive, i, &file_stat ) )
+         RaiseError( "Could not get file info. This archive is likely corrupted." );
 
       //
       // Display which file is being extracted
       //
-      wsprintf(szStatusMessage, "Extracting %s ...", file_stat.m_filename);
-      SetDlgItemText(hwndStatic, IDC_STATUS, szStatusMessage);
+      wsprintf( szStatusMessage, "Extracting %s ...", file_stat.m_filename );
+      SetDlgItemText( hwndStatic, IDC_STATUS, szStatusMessage );
 
       //
-      // Append the internal dir name to the target directory and create the full path
+      // Create the full path
       //
-      wsprintf(szTempDirBuffer, "%s%s", szTargetDirectory, file_stat.m_filename);
-      CleanPath(szTempDirBuffer);
-      CreateDirectoryRecursively(szTempDirBuffer);
-      if (mz_zip_reader_is_file_a_directory(&zip_archive, i))
+      wsprintf( szTempDirBuffer, "%s%s", szTargetDirectory, file_stat.m_filename );
+      CleanPath( szTempDirBuffer );
+      CreateDirectoryRecursively( szTempDirBuffer );
+      if ( mz_zip_reader_is_file_a_directory( &zip_archive, i) )
       {
-         CreateDirectory(szTempDirBuffer, NULL);
+         CreateDirectory( szTempDirBuffer, NULL );
       }
       else
       {
          FILETIME ft = { 0, 0 };
-         HANDLE hCurrentFile = CreateFile(szTempDirBuffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-         if (hCurrentFile == INVALID_HANDLE_VALUE)
-            RaiseError("Could not extract the current file.");
+         HANDLE hCurrentFile = CreateFile( szTempDirBuffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+         if ( hCurrentFile == INVALID_HANDLE_VALUE )
+            RaiseError( "Could not extract the current file." );
 
-         if (!mz_zip_reader_extract_to_callback(&zip_archive, i, file_write_func, hCurrentFile, 0))
+         if ( !mz_zip_reader_extract_to_callback( &zip_archive, i, file_write_func, hCurrentFile, 0 ) )
          {
-            SetFilePointer(hCurrentFile, 0, NULL, FILE_BEGIN);
-            SetEndOfFile(hCurrentFile);
-            RaiseError("Could not extract the current file.");
+            SetFilePointer( hCurrentFile, 0, NULL, FILE_BEGIN );
+            SetEndOfFile( hCurrentFile );
+            RaiseError( "Could not extract the current file." );
          }
 
-         LocalFileTimeToFileTime(&file_stat.m_time, &ft);
-         SetFileTime(hCurrentFile, NULL, NULL, &ft);
-         CloseHandle(hCurrentFile);
+         LocalFileTimeToFileTime( &file_stat.m_time, &ft );
+         SetFileTime( hCurrentFile, NULL, NULL, &ft );
+         CloseHandle( hCurrentFile );
       }
+
       //
       // Increment progress bar
       //
-      SendMessage(hProgress, PBM_SETPOS, i + 1, 0);
+      SendDlgItemMessage( hwndStatic, IDC_PROGRESSBAR, PBM_STEPIT, 0, 0 );
+#ifdef _DEBUG
+      Sleep( 500 );
+#endif
    }
-
-   //
-   // Clean up
-   //
-   mz_zip_reader_end(&zip_archive);
 
    //
    // Look pretty
    //
-   SendMessage( hProgress, PBM_SETPOS, n, 0 );
    Sleep( 300 );
-   PostMessage( hwndMain, WM_COMMAND, IDC_NEXT, 0 );
 
+   //PostMessage( hwndMain, WM_COMMAND, IDC_NEXT, 0 );
+   //
+   // If we're on the last dialog page, execute the command (if any)
+   //
+   ExecCommand();
+
+   //
+   // Open the folder in Explorer
+   //
+   if ( bOpenFolder )
+      OpenExplorerFolder( szTargetDirectory );
+
+   if ( iDeleteFiles )
+   {
+      ShowWindow( hwndMain, SW_SHOW );
+
+      //
+      // Look pretty
+      //
+      SetBannerText( "File Cleanup" );
+      SetSubBannerText( "Removing temp files" );
+      SetDlgItemText( hwndStatic, IDC_STATUS, "Cleaning up ..." );
+
+      SetDlgItemText( hwndStatic, IDC_TEXT, "The extracted files are being removed." );
+
+      //
+      // Prepare progress bar
+      //
+      SendDlgItemMessage(hwndStatic, IDC_PROGRESSBAR, PBM_SETPOS, 0, 0);
+
+      //
+      // Dramatic pause
+      //
+      Sleep( 500 );
+
+      //
+      // Enumerate files in reverse order
+      //
+      while ( i-- )
+      {
+         char szTempDirBuffer[ MAX_PATH * 2 ];
+         char szStatusMessage[ MAX_PATH + 30 ];
+
+         mz_zip_archive_file_stat file_stat;
+         if ( !mz_zip_reader_file_stat( &zip_archive, i, &file_stat ) )
+            RaiseError( "Could not get file info. This archive is likely corrupted." );
+
+         //
+         // Display which file is being deleted
+         //
+         wsprintf( szStatusMessage, "Deleting %s ...", file_stat.m_filename );
+         SetDlgItemText( hwndStatic, IDC_STATUS, szStatusMessage );
+
+         //
+         // Create the full path
+         //
+         wsprintf( szTempDirBuffer, "%s%s", szTargetDirectory, file_stat.m_filename );
+         CleanPath( szTempDirBuffer );
+
+         //
+         // Delete the file (or directory)
+         //
+         if ( mz_zip_reader_is_file_a_directory( &zip_archive, i) )
+            RemoveDirectory( szTempDirBuffer );
+         else
+            DeleteFile( szTempDirBuffer );
+
+         //
+         // Increment progress bar
+         //
+         SendDlgItemMessage( hwndStatic, IDC_PROGRESSBAR, PBM_STEPIT, 0, 0 );
+#ifdef _DEBUG
+         Sleep( 500 );
+#endif
+      }
+
+      //
+      // If there are any remaining files in this directory, this will fail.
+      // This is intended, becase we don't want to accidentally delete
+      // a file or directory underneath szTargetDirectory that existed
+      // before we started.
+      //
+      RemoveDirectory( szTargetDirectory );
+
+      Sleep( 500 );
+   }
+
+   mz_zip_reader_end( &zip_archive );
+   CleanUp();
    return 0;
 }
 
@@ -728,13 +739,15 @@ DWORD CALLBACK Extract( void *dummy )
    Change the dialog page
 
 */
-void SetDialogPage( int iPageNum )
+void SetDialogPage()
 {
+   char szTmp[ _countof(szURL) ];
+
    if ( hwndStatic != NULL ) DestroyWindow( hwndStatic );
 
    ShowWindow( hwndMain, SW_SHOW );
 
-   LoadDialog( iDialogArray[ iPageNum ] );
+   LoadDialog( iDialogArray[ iCurrentPage ] );
 
    EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
    EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
@@ -762,82 +775,71 @@ void SetDialogPage( int iPageNum )
    switch ( iCurrentPage )
    {
    case SPLASH_PAGE:
+      //
+      // Move the UI elements off screen
+      //
+      SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
+      SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
+      SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
+
+      SetWindowPos( hwndStatic, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE );
+
+      ShowWindow( GetDlgItem( hwndMain, IDC_WATERMARK ), SW_HIDE );
+
+      EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
+      EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
+
+      SetDlgItemText( hwndStatic, IDC_INTROBANNER, szPackageName );
+      SetDlgItemText( hwndStatic, IDC_SUBBANNER, szIntroText );
+
+      //
+      // If the URL is a mailto, parse it and display only the email address
+      //
+      if ( lstrcpyn( szTmp, szURL, sizeof "mailto:" ) && !lstrcmpi( szTmp, "mailto:" ) )
       {
-	     char szTmp[ _countof(szURL) ];
-
-         //
-         // Move the UI elements off screen
-         //
-         SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-         SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-         SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-
-         SetWindowPos( hwndStatic, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE );
-
-         ShowWindow( GetDlgItem( hwndMain, IDC_WATERMARK ), SW_HIDE );
-
-         EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
-         EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
-
-         SetDlgItemText( hwndStatic, IDC_INTROBANNER, szPackageName );
-         SetDlgItemText( hwndStatic, IDC_SUBBANNER, szIntroText );
-
-         //
-         // If the URL is a mailto, parse it and display only the email address
-         //
-         if ( lstrcpyn( szTmp, szURL, sizeof "mailto:" ) && !lstrcmpi( szTmp, "mailto:" ) )
-         {
-			gettoken( szURL + 7, "?", 0, szTmp );
-            SetDlgItemText( hwndStatic, IDC_URL, szTmp );
-         }
-         else
-         {
-            SetDlgItemText( hwndStatic, IDC_URL, szURL );
-         }
-
-
-         if ( bAutoExtract )
-            SetDlgItemText( hwndMain, IDC_NEXT, "&Extract" );
-
-         break;
+         gettoken( szURL + 7, "?", 0, szTmp );
+         SetDlgItemText( hwndStatic, IDC_URL, szTmp );
       }
+      else
+      {
+         SetDlgItemText( hwndStatic, IDC_URL, szURL );
+      }
+
+      if ( bAutoExtract )
+         SetDlgItemText( hwndMain, IDC_NEXT, "&Extract" );
+
+      break;
 
    case EXTRACT_PAGE:
-      {
-         //
-         // Set default target directory
-         //
-         SetDlgItemText( hwndStatic, IDC_EXTRACTPATH, *szDefaultPath ? szDefaultPath : szTargetDirectory );
+      //
+      // Set default target directory
+      //
+      SetDlgItemText( hwndStatic, IDC_EXTRACTPATH, *szDefaultPath ? szDefaultPath : szTargetDirectory );
 
-         SendDlgItemMessage( hwndStatic, IDC_EXTRACTPATH, EM_LIMITTEXT, 150, 0 );
-         SendDlgItemMessage( hwndStatic, IDC_AUTOCREATEDIR, BM_SETCHECK, BST_CHECKED, 0 );
+      SendDlgItemMessage( hwndStatic, IDC_EXTRACTPATH, EM_LIMITTEXT, 150, 0 );
+      SendDlgItemMessage( hwndStatic, IDC_AUTOCREATEDIR, BM_SETCHECK, BST_CHECKED, 0 );
 
-         EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
-         EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
-         EnableWindow( GetDlgItem( hwndMain, IDC_CANCEL ), TRUE );
+      EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
+      EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
+      EnableWindow( GetDlgItem( hwndMain, IDC_CANCEL ), TRUE );
 
-         DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
-         DLGITEM_SETFONT( hwndStatic, IDC_EXTRACTPATH )
-         DLGITEM_SETFONT( hwndStatic, IDC_GLYPHBROWSE )
-         DLGITEM_SETFONT( hwndStatic, IDC_AUTOCREATEDIR )
+      DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
+      DLGITEM_SETFONT( hwndStatic, IDC_EXTRACTPATH )
+      DLGITEM_SETFONT( hwndStatic, IDC_GLYPHBROWSE )
+      DLGITEM_SETFONT( hwndStatic, IDC_AUTOCREATEDIR )
 
-         break;
-      }
+      break;
 
    case PROGRESS_PAGE:
-      {
-         DWORD dwThreadID;
+      EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), FALSE );
+      EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
 
-         EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), FALSE );
-         EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
+      DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
+      DLGITEM_SETFONT( hwndStatic, IDC_STATUS )
 
-         DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
-         DLGITEM_SETFONT( hwndStatic, IDC_STATUS )
+      CloseHandle( CreateThread( NULL, 0, Extract, NULL, 0, NULL ) );
 
-         CreateThread( NULL, 0, Extract, NULL, 0, &dwThreadID );
-
-         break;
-      }
+      break;
    }
 }
 
@@ -863,43 +865,25 @@ void InitApp()
 
    DWORD dwDummy;
 
+   char szThisEXE[ MAX_PATH ];
    char szINIFileContents[ 16384 ];
 
-/*
-#ifdef _DEBUG // _DEBUG
-
-   //
-   // For debug builds, skip loading of metadata and display test text.
-   //
-   lstrcpy( szPackageName, "DEBUG SFX" );
-   lstrcpy( szIntroText, "This is a debug SFX for testing purposes. There are no files in this SFX." );
-   lstrcpy( szURL, "http://www.disoriented.com" );
-   lstrcpy( szDefaultPath, "*** no files here (DEBUG) *** " );
-   return ;
-
-#endif // _DEBUG
-*/
-
-   //
-   // Get the temp and current directories
-   //
-   GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
-
-
+#ifdef _DEBUG
+   lstrcpy( szThisEXE, "FESetup.zip" );
+   lstrcpy( szDefaultPath, "$curdir$\\ExtractionTestFolder" );
+   iDeleteFiles = TRUE;
+#else
    //
    // Have the SFX read itself
    //
-   hThisProcess = GetCurrentProcess();
-   GetModuleFileName( NULL, szThisEXE, MAX_PATH );
+   GetModuleFileName(NULL, szThisEXE, MAX_PATH);
+#endif
 
-   hFile = CreateFile( szThisEXE,
-                       GENERIC_READ,
-                       FILE_SHARE_READ,
-                       NULL,
-                       OPEN_EXISTING,
-                       0,
-                       NULL );
+   hFile = CreateFile( szThisEXE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
 
+#ifdef _DEBUG
+   iZipSize = GetFileSize( hFile, NULL );
+#else
    //
    // Look for start of the metadata
    //
@@ -918,7 +902,7 @@ void InitApp()
    {
       IMAGE_SECTION_HEADER sh;
       if ( !ReadFile( hFile, &sh, sizeof sh, &dwDummy, NULL ) || ( dwDummy != sizeof sh ) )
-	     RaiseError( "Could not read the source SFX." );
+         RaiseError( "Could not read the source SFX." );
       EndOffset = ( DWORD ) ( sh.PointerToRawData + sh.SizeOfRawData );
       if ( MetaDataOffset < EndOffset )
          MetaDataOffset = EndOffset;
@@ -956,9 +940,9 @@ void InitApp()
       else
          if ( !lstrcmpi( token, "Delete" ) ) iDeleteFiles = lstrstr( argument, "=1" ) != 0;
       else
-         if ( !lstrcmpi( token, "NoGUI" ) ) bNoGUI = lstrstr(argument, "=1") != 0;
+         if ( !lstrcmpi( token, "NoGUI" ) ) bNoGUI = lstrstr( argument, "=1" ) != 0;
       else
-         if ( !lstrcmpi( token, "Debug" ) ) isDebug = lstrstr(argument, "=1") != 0;
+         if ( !lstrcmpi( token, "Debug" ) ) isDebug = lstrstr( argument, "=1" ) != 0;
       else
          if ( !lstrcmpi( token, "Name" ) ) gettoken( argument, "=", 1, szPackageName );
       else
@@ -968,16 +952,16 @@ void InitApp()
       else
          if ( !lstrcmpi( token, "Intro" ) ) gettoken( argument, "=", 1, szIntroText );
       else
-         if ( !lstrcmpi( token, "AutoExtract" ) ) bAutoExtract = lstrstr(argument, "=1") != 0;
+         if ( !lstrcmpi( token, "AutoExtract" ) ) bAutoExtract = lstrstr( argument, "=1" ) != 0;
       else
-         if ( !lstrcmpi( token, "OpenFolder" ) ) bOpenFolder = lstrstr(argument, "=1") != 0;
+         if ( !lstrcmpi( token, "OpenFolder" ) ) bOpenFolder = lstrstr( argument, "=1" ) != 0;
       else
-         if ( !lstrcmpi( token, "URL" ) ) gettoken(argument, "=", 1, szURL);
+         if ( !lstrcmpi( token, "URL" ) ) gettoken( argument, "=", 1, szURL );
       else
          if ( !lstrcmpi( token, "Shortcut" ) )
          {
-            gettoken(argument, "=", 1, token);
-            stkPush(&stk_Shortcuts, token);
+            gettoken( argument, "=", 1, token );
+            AppendMenu( hShortcuts, MF_STRING, 0, token );
          }
       }
    }
@@ -986,9 +970,10 @@ void InitApp()
    // Search for the start of the zip file
    //
    if ( MetaDataSize + 4 > dwDummy )
-      RaiseError("Could not get file info. This archive is likely corrupted.");
+      RaiseError( "Could not get file info. This archive is likely corrupted." );
 
    iZipOffset = EndOffset + MetaDataSize;
+#endif
 
    //
    // Replace return carriages in intro text.
@@ -1027,119 +1012,31 @@ void InitApp()
    CleanPath( szDefaultPath );
 
    lstrcpy( szTargetDirectory, szDefaultPath );
+
 }
-
-
-/*
-
-   DeleteFiles
-
-   Deletes the extract files. This is broken into another function so we can call it
-   from another thread and still have the UI be responsive.
-
-*/
-DWORD CALLBACK DeleteFiles( void *dummy )
-{
-   HWND hProgress = GetDlgItem( hwndStatic, IDC_PROGRESSBAR );
-   int iTotalFiles = stkCount( &stk_ExtractedFiles );
-
-
-   //
-   // Look pretty
-   //
-   ShowWindow( hwndMain, SW_SHOW );
-
-   SetBannerText( "File Cleanup" );
-   SetSubBannerText( "Removing temp files" );
-   SetDlgItemText( hwndStatic, IDC_STATUS, "Cleaning up ..." );
-
-   SendMessage( hProgress, PBM_SETRANGE, 0, MAKELPARAM( 0, stkCount( &stk_ExtractedFiles ) ) );
-   SetDlgItemText( hwndStatic, IDC_TEXT, "The extracted files are being removed." );
-
-   //
-   // Dramatic pause
-   //
-   Sleep( 500 );
-
-   //
-   // Enumerate the extracted files stack
-   //
-   while ( stkCount( &stk_ExtractedFiles ) > 0 )
-   {
-      int i;
-      char szCurrentFile[ MAX_PATH ],
-      szDeleteMessage[ MAX_PATH + 30 ];
-
-      //
-      // Format strings
-      //
-      wsprintf( szCurrentFile, "%s%s", szTargetDirectory, stkPeek( &stk_ExtractedFiles ) );
-      wsprintf( szDeleteMessage, "Deleting %s ...", stkPeek( &stk_ExtractedFiles ) );
-
-      SetDlgItemText( hwndStatic, IDC_STATUS, szDeleteMessage );
-
-      //
-      // Internally, zip files delimit folders with forward slashes. So,
-      // convert all forward slashes to backwards slashes.
-      //
-      for ( i = 0 ; szCurrentFile[ i ] != '\0' ; ++i )
-      {
-         if ( szCurrentFile[ i ] == '/' ) szCurrentFile[ i ] = '\\';
-      }
-
-      //
-      // Delete the file (or directory)
-      //
-      if ( DirectoryExists( szCurrentFile ) )
-         RemoveDirectory( szCurrentFile );
-
-      if ( FileExists( szCurrentFile ) )
-         DeleteFile( szCurrentFile );
-
-      //
-      // Pop the stack
-      //
-      stkPop( &stk_ExtractedFiles );
-
-      //
-      // Update the progress bar
-      //
-      SendMessage( hProgress, PBM_SETPOS, iTotalFiles - stkCount( &stk_ExtractedFiles ), 0 );
-
-   }
-
-   //
-   // If there are any remaining files in this directory, this will fail.
-   // This is intended, becase we don't want to accidentally delete
-   // a file or directory underneath szTargetDirectory that existed
-   // before we started.
-   //
-   RemoveDirectory( szTargetDirectory );
-
-   Sleep( 500 );
-   CleanUp();
-   return 0;
-}
-
 
 
 void ExecCommand()
 {
-   BOOL bNoDelete = FALSE;
+   int n = GetMenuItemCount( hShortcuts );
+   int i;
 
    //
    // Create shortcuts
    //
-   while ( stkCount( &stk_Shortcuts ) > 0 )
+   for ( i = 0 ; i < n ; ++i )
    {
+      char buf[ MAX_PATH * 2 ];
       char location[ MAX_PATH ];
       char target[ MAX_PATH ];
+
+      GetMenuString( hShortcuts, i, buf, _countof(buf), MF_BYPOSITION );
 
       //
       // Expand the path variables for the shortcut
       //
-      gettoken( stkPeek( &stk_Shortcuts ), "|", 0, location );
-      gettoken( stkPeek( &stk_Shortcuts ), "|", 1, target );
+      gettoken( buf, "|", 0, location );
+      gettoken( buf, "|", 1, target );
 
       ParsePath( location );
       ParsePath( target );
@@ -1157,11 +1054,6 @@ void ExecCommand()
       // Create Shortcut
       //
       CreateShortCut( location, NULL, target );
-
-      //
-      // Pop the stack
-      //
-      stkPop( &stk_Shortcuts );
    }
 
    //
@@ -1172,10 +1064,9 @@ void ExecCommand()
       char szExecCommandAndPath[ MAX_PATH ];
 
       CleanPath( szTargetDirectory );
-      SetCurrentDirectory( szTargetDirectory );
 
       lstrcpy( szExecCommandAndPath, szExecuteCommand );
-	  ParsePath( szExecCommandAndPath );
+      ParsePath( szExecCommandAndPath );
       CleanPath( szExecCommandAndPath );
 
       //
@@ -1193,15 +1084,16 @@ void ExecCommand()
             PROCESS_INFORMATION ProcessInfo;
             STARTUPINFO StartupInfo = { sizeof StartupInfo };
 
-            if ( CreateProcess( NULL, szExecCommandAndPath, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo ) )
+            if ( CreateProcess( NULL, szExecCommandAndPath, NULL, NULL, FALSE, 0, NULL, szTargetDirectory, &StartupInfo, &ProcessInfo ) )
             {
                //
                // It was successfully started. Hide FreeExtractor, wait for the process to
                // complete, then show FreeExtractor.
                //
                ShowWindow( hwndMain, SW_HIDE );
+               CloseHandle( ProcessInfo.hThread );
                WaitForSingleObject( ProcessInfo.hProcess, INFINITE );
-               ShowWindow( hwndMain, SW_SHOW );
+               CloseHandle( ProcessInfo.hProcess );
             }
             else
             {
@@ -1211,7 +1103,7 @@ void ExecCommand()
                char szErrorMessage[ 1024 ];
 
                wsprintf( szErrorMessage, "%s could not be executed.", szExecCommandAndPath );
-               MessageBox( NULL, szErrorMessage, "Error", _CRITICAL_ );
+               MessageBox( hwndMain, szErrorMessage, "Error", _CRITICAL_ );
             }
          }
          else
@@ -1219,8 +1111,9 @@ void ExecCommand()
             //
             // It's not a Win32 PE. (Probably a 16-bit DOS exe)
             //
-            bNoDelete = TRUE;
-            WinExec(szExecCommandAndPath, SW_SHOW);
+            iDeleteFiles = FALSE;
+            SetCurrentDirectory( szTargetDirectory );
+            WinExec( szExecCommandAndPath, SW_SHOW );
          }
       }
       else
@@ -1240,7 +1133,7 @@ void ExecCommand()
               IsExtension( szExecCommandAndPath, "mp3" ) ||           // mp3 File
               IsExtension( szExecCommandAndPath, "chm" ) )            // Microsoft Compiled HTML Help
          {
-            ShellExecute( hwndMain, "open", szExecCommandAndPath, NULL, NULL, SW_SHOWDEFAULT );
+            ShellExecute( hwndMain, "open", szExecCommandAndPath, NULL, szTargetDirectory, SW_SHOWDEFAULT );
 
             //
             // BUGBUG: If the document is successfully executed, it becomes locked and can't be
@@ -1248,15 +1141,6 @@ void ExecCommand()
             //         deleting the other extracted files.
          }
       }
-   }
-
-   //
-   // Optionally delete the files and directories created by this SFX.
-   //
-   if ( iDeleteFiles && !bNoDelete )
-   {
-      HANDLE hDelete = CreateThread( NULL, 0, DeleteFiles, NULL, 0, NULL );
-      CloseHandle( hDelete );
    }
 }
 
@@ -1270,8 +1154,9 @@ void CreateDirCheckError()
       // Directory couldn't be created.
       //
       char buf[ 1536 ];
-      char szWinError[ 1024 ] = "";
+      char szWinError[ 1024 ];
 
+      *szWinError = '\0';
       if ( GetLastError() != ERROR_SUCCESS )
       {
          FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM,

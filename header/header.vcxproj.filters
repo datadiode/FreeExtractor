@@ -21,9 +21,6 @@
     <ClCompile Include="src\shell.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\stack.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\miniz.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -39,9 +36,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\shell.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\stack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\miniz.h">

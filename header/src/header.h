@@ -39,61 +39,41 @@
 
 
 #include "resource.h"
-#include "..\..\common\FECommon.h"
 #include "miniz.h"
-#include "stack.h"
+#include "..\..\common\FECommon.h"
 #include "shell.h"
 
-
-#ifdef PERF
- #include <stdio.h>
-#endif
 
 #define SPLASH_PAGE        1
 #define EXTRACT_PAGE       2
 #define PROGRESS_PAGE      3
 
+char szDefaultPath[ MAX_PATH ];
 
-HWND hwndInfo;
-
-HANDLE hThisProcess,
-hINITemp;
-
-LPVOID IoBuffer;
-
-char szCurrentDirectory[ MAX_PATH ];
-char szThisEXE[ MAX_PATH ];
-
-char szDefaultPath[ MAX_PATH*2 ];
-
-LPCTSTR const szBannerText[]
-= {"",
-   "",
+LPCTSTR const szBannerText[] =
+{
+   "",     // 1 based
+   "",     // splash screen
    "Extraction Path",
-   "Extracting Files"};
+   "Extracting Files"
+};
 
-LPCTSTR const szSubBannerText[]
-= {"",
-   "",
+LPCTSTR const szSubBannerText[] =
+{
+   "",     // 1 based
+   "",     // splash screen
    "Select a directory to extract files to.",
-   "FreeExtractor is extracting the compressed files in this archive."};
+   "FreeExtractor is extracting the compressed files in this archive."
+};
 
-int iEXEFileSize;
-int INIOffset;
 int iZipOffset = 0;
 int iZipSize = 0;
 int iDeleteFiles = 0;
-int iDialogArray[] = {0, IDD_SPLASH, IDD_PATH, IDD_PROGRESS };
 
+WORD const iDialogArray[] = { 0, IDD_SPLASH, IDD_PATH, IDD_PROGRESS };
 
-BOOL bDelete = FALSE;
-BOOL bAboutFlag;
-
-BOOL bOverwriteYesToAll = FALSE;
-BOOL bOverwriteNoToAll = FALSE;
-
-Stk stk_ExtractedFiles;
-Stk stk_Shortcuts;
+//BOOL bOverwriteYesToAll = FALSE;
+//BOOL bOverwriteNoToAll = FALSE;
 
 /*
 
@@ -102,8 +82,7 @@ Stk stk_Shortcuts;
 */
 void InitApp();
 DWORD CALLBACK Extract( void *dummy );
-DWORD CALLBACK DeleteFiles( void *dummy );
-void SetDialogPage( int iPageNum );
+void SetDialogPage();
 void ExecCommand();
 void CreateDirCheckError();
 

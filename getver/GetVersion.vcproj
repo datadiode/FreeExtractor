@@ -38,11 +38,6 @@
 				Name="VCWebServiceProxyGeneratorTool"
 			/>
 			<Tool
-				Name="VCMIDLTool"
-				TypeLibraryName=".\..\output/GetVersion.tlb"
-				HeaderFileName=""
-			/>
-			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				InlineFunctionExpansion="1"
@@ -50,9 +45,6 @@
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				AssemblerListingLocation=".\obj/"
-				ObjectFile=".\obj/"
-				ProgramDataBaseFileName=".\obj/"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 			/>
@@ -75,7 +67,6 @@
 				GenerateManifest="false"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool

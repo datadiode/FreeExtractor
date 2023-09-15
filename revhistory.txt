@@ -1,3 +1,11 @@
+FreeExtractor v1.48, September 15, 2023
+
+   - FEWIZARD: Allow to pass a presets file on the command line, alongside with the Zip file.
+   - SFX: Restore delete-files-after-extraction functionality which, if working, would have got lost in v1.46.
+   - Restore the ability to change SFX icon which got lost in v1.45 due to moving SFX stubs to resources.
+   - Convert the intro.bmp to my favorite colors, and use the same blue flavor for text colorization.
+   - Again, yet more unnecessary refactorings.
+
 FreeExtractor v1.47, September 10, 2023
 
    - FEWIZARD: Allow to choose a presets file other than the default.ini found in the executable's folder.
