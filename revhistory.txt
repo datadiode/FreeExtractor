@@ -1,3 +1,11 @@
+FreeExtractor v1.49, September 20, 2023
+
+   - In addition to .ZIP, accept archives in .CAB format (but neglect the delete-files-after-extraction option).
+   - Introduce the $cmdline$ placeholder to make arguments passed to the SFX available to the execution command.
+   - Properly handle placeholders in other places than at the beginning, and prevent buffer overruns.
+   - No longer treat $ and % as equivalent, to reduce risk of surprises due to conflicting environment variables.
+   - Minor simplifications and cosmetic fixes.
+
 FreeExtractor v1.48, September 15, 2023
 
    - FEWIZARD: Allow to pass a presets file on the command line, alongside with the Zip file.

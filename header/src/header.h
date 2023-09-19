@@ -39,7 +39,6 @@
 
 
 #include "resource.h"
-#include "miniz.h"
 #include "..\..\common\FECommon.h"
 #include "shell.h"
 

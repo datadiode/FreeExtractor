@@ -324,5 +324,5 @@ int main( int argc, char *argv[] )
 
    printf( "Build time: %1.2f seconds (%.2f MB/S)\n", fCompileTime, fBandwidth );
 
-   return 1;
+   return 0;
 }

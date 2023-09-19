@@ -38,6 +38,9 @@
 				Name="VCWebServiceProxyGeneratorTool"
 			/>
 			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				InlineFunctionExpansion="1"
@@ -80,8 +83,6 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
-				OutputFile=".\..\output/GetVersion.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"

@@ -60,7 +60,7 @@
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.48"
+#define VERSION            "v1.49"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
@@ -142,7 +142,6 @@ int const iFontSize = 13;
  
 */
 #ifndef _CONSOLE
-int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow );
 INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
 INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
 #endif
@@ -274,52 +273,6 @@ void FormatText( HFONT *phf, HWND handle, LPTSTR szFontName, int iFontSize, BOOL
 
 
 #endif // _CONSOLE
-
-
-
-
-
-/*
- 
-  IsSpace
- 
-*/
-BOOL IsSpace( int in )
-{
-   if ( in == 0x20 || in >= 0x09 && in <= 0x0D ) return TRUE;
-   return FALSE;
-}
-
-
-
-#ifndef _CONSOLE
-void __cdecl WinMainCRTStartup( void )
-{
-   int mainret;
-   char *lpszCommandLine;
-   STARTUPINFO StartupInfo;
-
-   lpszCommandLine = GetCommandLine();
-
-   if ( *lpszCommandLine == '"' )
-   {
-      do ++lpszCommandLine; while ( *lpszCommandLine && ( *lpszCommandLine != '"' ) );
-      if ( *lpszCommandLine == '"' ) lpszCommandLine++;
-   }
-   else while ( *lpszCommandLine > ' ' ) lpszCommandLine++;
-
-   while ( *lpszCommandLine && ( *lpszCommandLine <= ' ' ) ) lpszCommandLine++;
-
-   StartupInfo.dwFlags = 0;
-   GetStartupInfo( &StartupInfo );
-
-   mainret = WinMain( GetModuleHandle( NULL ), NULL, lpszCommandLine,
-                      StartupInfo.dwFlags & STARTF_USESHOWWINDOW ? StartupInfo.wShowWindow : SW_SHOWDEFAULT );
-
-   ExitProcess( mainret );
-}
-#endif // _CONSOLE
-
 
 
 /********************************************************************************************
@@ -488,119 +441,120 @@ BOOL DoesFontExist ( LPTSTR szName )
  
 */
 #ifdef _HEADER_
-void ParsePath( char *input )
+void ParsePath( char *output, int size )
 {
+   int offset = 0;
    int tokennum = 0;
    char *delimiter;
 
-   char szExpandedInput[ MAX_PATH ];
-   char szCurToken[ MAX_PATH ];
-   char output[ MAX_PATH ];
+   char input[ 4096 ];
+   char token[ 4096 ];
 
-   *szExpandedInput = *szCurToken = *output = '\0';
-
-   //
-   // Replace all occurances of a dollar sign with a percent sign
-   //
-   while ( ( delimiter = lstrstr( input, "$" ) ) != NULL ) *delimiter = '%';
-
-   ExpandEnvironmentStrings( input, szExpandedInput, MAX_PATH );
+   ExpandEnvironmentStrings( output, input, _countof(input) );
 
    do
    {
       //
-      // Get the next token (delimited by a '\')
+      // Get the next token (delimited by a '$')
       //
-      delimiter = gettoken( szExpandedInput, "\\", tokennum++, szCurToken );
+      delimiter = gettoken( input, "$", tokennum, token );
 
+      if ( ++tokennum & 1 )
+      {
+         // Leave it alone - only every second token qualifies for replacement.
+      }
+      else if ( *token == '\0' )
+      {
+         lstrcpy( token, "$$" );
+      }
       //
       // Start Menu (for this user)
       //
-      if ( !lstrcmpi( szCurToken, "%startmenu%" ) )
+      else if ( !lstrcmpi( token, "startmenu" ) )
       {
-         queryShellFolders( "Programs", output );
+         queryShellFolders( "Programs", token );
       }
 
       //
       // Desktop
       //
-      else if ( !lstrcmpi( szCurToken, "%desktop%" ) )
+      else if ( !lstrcmpi( token, "desktop" ) )
       {
-         queryShellFolders( "Desktop", output );
+         queryShellFolders( "Desktop", token );
       }
 
       //
       // Sendto Directory
       //
-      else if ( !lstrcmpi( szCurToken, "%sendto%" ) )
+      else if ( !lstrcmpi( token, "sendto" ) )
       {
-         queryShellFolders( "SendTo", output );
+         queryShellFolders( "SendTo", token );
       }
 
       //
       // Favorites
       //
-      else if ( !lstrcmpi( szCurToken, "%favorites%" ) )
+      else if ( !lstrcmpi( token, "favorites" ) )
       {
-         queryShellFolders( "Favorites", output );
+         queryShellFolders( "Favorites", token );
       }
 
       //
       // Start Up Folder in the Start Menu for this user
       //
-      else if ( !lstrcmpi( szCurToken, "%startup%" ) )
+      else if ( !lstrcmpi( token, "startup" ) )
       {
-         queryShellFolders( "Startup", output );
+         queryShellFolders( "Startup", token );
       }
 
       //
       // Output directory
       //
-      else if ( !lstrcmpi( szCurToken, "%targetdir%" ) )
+      else if ( !lstrcmpi( token, "targetdir" ) )
       {
-         lstrcpy( output, szTargetDirectory );
+         lstrcpy( token, szTargetDirectory );
       }
 
       //
       // Current Directory
       //
-      else if ( !lstrcmpi( szCurToken, "%curdir%" ) )
+      else if ( !lstrcmpi( token, "curdir" ) )
       {
-         GetCurrentDirectory( MAX_PATH, output );
+         GetCurrentDirectory( MAX_PATH, token );
       }
 
       //
       // Quicklaunch directory: If the OS doesn't support
       // it, this defaults to the temp dir.
       //
-      else if ( !lstrcmpi( szCurToken, "%quicklaunch%" ) )
+      else if ( !lstrcmpi( token, "quicklaunch" ) )
       {
-         queryShellFolders( "AppData", output );
+         queryShellFolders( "AppData", token );
 
-         if ( lstrlen( output ) > 0 )
+         if ( *token )
          {
-            lstrcat( output, "\\Microsoft\\Internet Explorer\\Quick Launch" );
+            lstrcat( token, "\\Microsoft\\Internet Explorer\\Quick Launch" );
          }
 
-         if ( !DirectoryExists( output ) )
+         if ( !DirectoryExists( token ) )
          {
-            GetTempPath( MAX_PATH, output );
+            GetTempPath( MAX_PATH, token );
          }
       }
 
       //
       // Program Files Directory
       //
-      else if ( !lstrcmpi( szCurToken, "%programfiles%" ) )
+      else if ( !lstrcmpi( token, "programfiles" ) )
       {
          HKEY hKey;
 
-         lstrcpy( output, "C:\\Program Files" );
+         lstrcpy( token, "C:\\Program Files" );
          if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", 0, KEY_READ, &hKey ) == ERROR_SUCCESS )
          {
-            int l = sizeof( output );
+            int l = MAX_PATH;
             int t = REG_SZ;
-            RegQueryValueEx( hKey, "ProgramFilesDir", NULL, &t, output, &l );
+            RegQueryValueEx( hKey, "ProgramFilesDir", NULL, &t, token, &l );
             RegCloseKey( hKey );
          }
       }
@@ -608,22 +562,25 @@ void ParsePath( char *input )
       //
       // System Directory
       //
-      else if ( !lstrcmpi( szCurToken, "%sysdir%" ) )
+      else if ( !lstrcmpi( token, "sysdir" ) )
       {
-         GetSystemDirectory( output, MAX_PATH );
+         GetSystemDirectory( token, MAX_PATH );
+      }
+
+      //
+      // Command line
+      //
+      else if ( !lstrcmpi( token, "cmdline" ) )
+      {
+         lstrcpyn( token, GetCommandLine(), _countof(token) );
       }
 
       //
       // The token isn't a variable, so append it.
       //
-      else
-      {
-         lstrcat( output, szCurToken );
-      }
-      lstrcat( output, delimiter );
+      lstrcpyn( output + offset, token, size - offset );
+      offset += lstrlen( output + offset );
    } while ( *delimiter );
-
-   lstrcpy( input, output );
 }
 #endif //_HEADER_
 
@@ -762,9 +719,8 @@ void replace_data( char *hdr, int hdr_len, const char *srch, int srchlen, const 
 DWORD CALLBACK Build( void *dummy )
 {
    HANDLE hFEHeaderOut, hSourceZip;
-   LPVOID IoBuffer;
 
-   char szINIFileContents[ 16384 ];
+   char IoBuffer[ BUFFER_SIZE ];
    int iINIFileSize;
    int iZipFileSize;
    int i = 0;
@@ -774,9 +730,20 @@ DWORD CALLBACK Build( void *dummy )
    HRSRC const hICON = FindResource(NULL, "setup.ico", RT_RCDATA);
    DWORD const cchICON = SizeofResource(NULL, hICON);
    char* const pchICON = (char*)LoadResource(NULL, hICON);
-   HRSRC const hSTUB = FindResource(NULL, bSubsystem64 ?
-      (bRunElevated ? "header64_elevated.exe" : "header64.exe") :
-      (bRunElevated ? "header32_elevated.exe" : "header32.exe"),
+   HRSRC const hSTUB = FindResource(NULL,
+      IsExtension(szZipFileName, "cab") ? (
+         bSubsystem64 ? (
+            bRunElevated ? "header64_cab_elevated" : "header64_cab"
+         ) : (
+            bRunElevated ? "header32_cab_elevated" : "header32_cab"
+         )
+      ) : (
+         bSubsystem64 ? (
+            bRunElevated ? "header64_elevated" : "header64"
+         ) : (
+            bRunElevated ? "header32_elevated" : "header32"
+         )
+      ),
       RT_RCDATA);
    DWORD const cchSTUB = SizeofResource(NULL, hSTUB);
    char* const pchSTUB = (char*)memcpy(_alloca(cchSTUB), LoadResource(NULL, hSTUB), cchSTUB);
@@ -826,10 +793,10 @@ DWORD CALLBACK Build( void *dummy )
    //
    while ( szIntroText[ i ] != '\0' )
    {
-      if ( ( szIntroText[ i ] == 0x0D ) && ( szIntroText[ i + 1 ] == 0x0A ) )
+      if ( ( szIntroText[ i ] == '\\' ) && ( szIntroText[ i + 1 ] == 'n' ) )
       {
-         szIntroText[ i ] = '\\';
-         szIntroText[ i + 1 ] = 'n';
+         szIntroText[ i ] = 0x0D;
+         szIntroText[ i + 1 ] = 0x0A;
       }
       i++;
    }
@@ -840,9 +807,8 @@ DWORD CALLBACK Build( void *dummy )
    //
    // Build the metadata string
    //
-   p = szINIFileContents;
+   p = IoBuffer;
    p += wsprintf(p, "Name=%s", szPackageName) + 1;
-   p += wsprintf(p, "ZipSize=%d", iZipFileSize) + 1;
    p += wsprintf(p, "Exec=%s", szExecuteCommand) + 1;
    p += wsprintf(p, "DefaultPath=%s", szExtractionPath) + 1;
    p += wsprintf(p, "Intro=%s", szIntroText) + 1;
@@ -856,25 +822,20 @@ DWORD CALLBACK Build( void *dummy )
 
    for ( q = szShortcut ; *q ; q += lstrlen(q) + 1 )
       p += wsprintf( p, "%s", q ) + 1;
-   iINIFileSize = ( int ) ( p - szINIFileContents );
+   iINIFileSize = ( int ) ( p - IoBuffer );
 
    //
    // Write the metadata out
    //
-   WriteFile( hFEHeaderOut, szINIFileContents, iINIFileSize, &dwDummy, NULL );
+   WriteFile( hFEHeaderOut, IoBuffer, iINIFileSize, &dwDummy, NULL );
 
 
    //
    // Append the zip file to the SFX
    //
-   IoBuffer = VirtualAlloc( NULL, BUFFER_SIZE, MEM_COMMIT, PAGE_READWRITE );
-
-   for ( NULL; iZipFileSize > 0; iZipFileSize = iZipFileSize - BUFFER_SIZE )
+   while ( ReadFile( hSourceZip, IoBuffer, sizeof IoBuffer, &dwBytesRead, NULL ) && dwBytesRead != 0 )
    {
-      ReadFile ( hSourceZip, IoBuffer, BUFFER_SIZE, &dwBytesRead, NULL );
       WriteFile( hFEHeaderOut, IoBuffer, dwBytesRead, &dwBytesWritten, NULL );
-
-      if ( dwBytesWritten = 0 ) break;
    }
 
    //
@@ -882,7 +843,6 @@ DWORD CALLBACK Build( void *dummy )
    //
    SetStatus( "Finishing up ..." );
 
-   VirtualFree( IoBuffer, 0, MEM_RELEASE );
    CloseHandle( hFEHeaderOut );
    CloseHandle( hSourceZip );
 

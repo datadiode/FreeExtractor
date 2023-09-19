@@ -60,7 +60,7 @@ BEGIN
                     IDC_TEXT,0,0,275,21
     CONTROL         "Progress1",IDC_PROGRESSBAR,"msctls_progress32",
                     PBS_SMOOTH,0,45,275,12
-    LTEXT           "",IDC_STATUS,0,36,275,8
+    LTEXT           "",IDC_STATUS,0,36,275,8,SS_PATHELLIPSIS
 END
 
 IDD_ABOUT DIALOGEX 34, 22, 203, 105

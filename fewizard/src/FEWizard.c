@@ -56,6 +56,27 @@ BOOL IsZipFile( LPTSTR szFileName )
    return cb == 4 && buf[ 0 ] == 'P' && buf[ 1 ] == 'K' && buf[ 2 ] == 0x03 && buf[ 3 ] == 0x04;
 }
 
+/*
+
+   IsCabFile
+
+   Determines if a file is a real cab file by checking the first four
+   bytes of a file and checking for the CAB signature header.
+
+*/
+BOOL IsCabFile( LPTSTR szFileName )
+{
+   char buf[4];
+   DWORD cb = 0;
+   HANDLE handle = CreateFile( szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
+   if ( handle != INVALID_HANDLE_VALUE )
+   {
+      ReadFile( handle, buf, 4, &cb, NULL );
+      CloseHandle( handle );
+   }
+   return cb == 4 && buf[ 0 ] == 'M' && buf[ 1 ] == 'S' && buf[ 2 ] == 'C' && buf[ 3 ] == 'F';
+}
+
 void OpenINI()
 {
    int i, n;
@@ -103,11 +124,13 @@ void OpenINI()
    }
 }
 
-int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+void WinMainCRTStartup()
 {
+   LPTSTR lpCmdLine = GetCommandLine();
+
    char buf[ MAX_PATH ];
 
-   ghInstance = hInstance;
+   ghInstance = GetModuleHandle( NULL );
 
    //
    // Determine font to use
@@ -145,7 +168,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
    // We're done initializing. Show the main dialog.
    //
    DialogBoxParam( ghInstance, MAKEINTRESOURCE( IDD_TEMPLATE ), NULL, MainDlgProc, (LPARAM) lpCmdLine );
-   return 0;
+   ExitProcess( 0 );
 }
 
 
@@ -274,6 +297,13 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
                RaiseError( "The file you have specified is not a ZIP file." );
             Open();
          }
+         else if (PathMatchSpec(p, "*.cab"))
+         {
+            lstrcpy(szZipFileName, p);
+            if (!IsCabFile(szZipFileName))
+               RaiseError("The file you have specified is not a CAB file.");
+            Open();
+         }
          else if ( PathMatchSpec( p, "*.ini" ) )
          {
             lstrcpy( szINIPath, p );
@@ -350,6 +380,11 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
                if ( PathMatchSpec( szFileName, "*.zip" ) )
                {
                   lstrcpy( szZipFileName, szFileName );
+                  Open();
+               }
+               else if (PathMatchSpec(szFileName, "*.cab"))
+               {
+                  lstrcpy(szZipFileName, szFileName);
                   Open();
                }
                else if ( PathMatchSpec( szFileName, "*.ini" ) )
@@ -961,7 +996,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
             ofn.lpstrFile = szZipFileName;
             ofn.hInstance = ghInstance;
             ofn.nMaxFile = MAX_PATH;
-            ofn.lpstrFilter = "ZIP Files (*.zip)\0*.zip\0All Files (*.*)\0*.*\0";
+            ofn.lpstrFilter = "ZIP Files (*.zip)\0*.zip\0CAB Files (*.cab)\0*.cab\0All Files (*.*)\0*.*\0";
             ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_ENABLESIZING | OFN_SHAREAWARE;
 
             if ( GetOpenFileName( &ofn ) ) Open();
@@ -1014,7 +1049,7 @@ void Open()
       // The user drag-and-dropped a directory. Handle gracefully.
       //
       *szZipFileName = '\0';
-      MessageBox( hwndMain, "Directories are not supported. Select a .zip file.", "FreeExtractor Error", 0 );
+      MessageBox( hwndMain, "Directories are not supported. Select a .zip or .cab file.", "FreeExtractor Error", 0 );
    }
 
    SetDlgItemText( hwndStatic, IDC_ZIPPATH, szZipFileName );

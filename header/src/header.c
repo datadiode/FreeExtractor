@@ -33,16 +33,23 @@
 #include "header.h"
 #include "resource.h"
 
+#ifdef _CAB_HEADER_
+#define ARCHIVE_SIGNATURE "MSCF"
+#else
+#define ARCHIVE_SIGNATURE "PK\x03\x04"
+#endif
+
+char szThisEXE[MAX_PATH];
 
 
 /*
 
-   WinMain
+   Entry point
 
 */
-int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+void WinMainCRTStartup()
 {
-   ghInstance = hInstance;
+   ghInstance = GetModuleHandle( NULL );
 
    //
    // Initialize the stacks
@@ -95,7 +102,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
       //
       DialogBox(ghInstance, MAKEINTRESOURCE(IDD_TEMPLATE), NULL, MainDlgProc);
    }
-   return 0;
+   ExitProcess( 0 );
 }
 
 
@@ -507,6 +514,190 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
    return FALSE;
 }
 
+#ifdef _CAB_HEADER_
+
+// Code reused from https://github.com/mcho/CmdOpen/blob/master/setup/cabinet.c
+// Copyright (C) Kai Liu
+// SPDX-License-Identifier: BSD-3-Clause
+
+#include <fdi.h>
+
+#pragma comment(lib, "cabinet.lib")
+
+typedef struct
+{
+    BOOL bEstimate;
+    UINT uTotalFiles;
+    UINT uExtractedFiles;
+} EXTRACTDATA;
+
+/**
+ * fdimalloc/fdifree
+ **/
+FNALLOC(fdimalloc)
+{
+    return LocalAlloc( LPTR, cb );
+}
+
+FNFREE(fdifree)
+{
+    LocalFree( pv );
+}
+
+/**
+ * fdiopen
+ * Called only for reading the cabinet, never for writing an extracted file
+ **/
+FNOPEN(fdiopen)
+{
+   HANDLE hf = CreateFile( szThisEXE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
+   if ( hf != INVALID_HANDLE_VALUE )
+      SetFilePointer( ( HANDLE ) hf, iZipOffset, NULL, FILE_BEGIN );
+   return ( INT_PTR ) hf;
+}
+
+/**
+ * fdiread
+ * Called only for reading the cabinet, never for writing an extracted file
+ **/
+FNREAD(fdiread)
+{
+   return ReadFile( ( HANDLE ) hf, pv, cb, &cb, NULL ) ? cb : 0;
+}
+
+/**
+ * fdiwrite
+ * Called only for writing an extracted file, never for reading the cabinet
+ **/
+FNWRITE(fdiwrite)
+{
+   return WriteFile( ( HANDLE ) hf, pv, cb, &cb, NULL ) ? cb : 0;
+}
+
+/**
+ * fdiclose
+ * Called only for reading the cabinet, never for writing an extracted file
+ **/
+FNCLOSE(fdiclose)
+{
+   CloseHandle( ( HANDLE ) hf);
+   return 0;
+}
+
+/**
+ * fdiseek
+ * Called only for reading the cabinet, never for writing an extracted file
+ **/
+FNSEEK(fdiseek)
+{
+   if (seektype == FILE_BEGIN)
+      dist += iZipOffset;
+   return SetFilePointer( (HANDLE) hf, dist, NULL, seektype ) - iZipOffset;
+}
+
+/**
+ * fdiNotify
+ **/
+FNFDINOTIFY(fdiNotify)
+{
+   EXTRACTDATA *pExtractData = pfdin->pv;
+
+   char szTempDirBuffer[MAX_PATH * 2];
+   char szStatusMessage[MAX_PATH + 30];
+
+   HANDLE hf;
+   FILETIME ft;
+
+   switch (fdint)
+   {
+   case fdintCOPY_FILE:
+      if (pExtractData->bEstimate)
+      {
+         ++pExtractData->uTotalFiles;
+         return 0;
+      }
+
+      //
+      // Display which file is being extracted
+      //
+      wsprintf( szStatusMessage, "Extracting %s ...", pfdin->psz1 );
+      SetDlgItemText( hwndStatic, IDC_STATUS, szStatusMessage );
+      UpdateWindow(hwndStatic);
+
+      //
+      // Create the full path
+      //
+      wsprintf( szTempDirBuffer, "%s%s", szTargetDirectory, pfdin->psz1 );
+      CleanPath( szTempDirBuffer );
+      CreateDirectoryRecursively( szTempDirBuffer );
+
+      hf = CreateFile(szTempDirBuffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+      return (INT_PTR) hf;
+
+   case fdintCLOSE_FILE_INFO:
+
+      // Set the file time and close the handle
+      DosDateTimeToFileTime(pfdin->date, pfdin->time, &ft);
+      SetFileTime((HANDLE)pfdin->hf, NULL, NULL, &ft);
+      CloseHandle((HANDLE)pfdin->hf);
+
+      // Bookkeeping...
+      ++pExtractData->uExtractedFiles;
+      SendDlgItemMessage(hwndStatic, IDC_PROGRESSBAR, PBM_STEPIT, 0, 0);
+
+      return 1;
+   }
+
+   return 0;
+}
+
+/**
+ * ExtractCabResource
+ **/
+DWORD CALLBACK Extract( void *dummy )
+{
+	ERF erf;
+
+   EXTRACTDATA ed = { TRUE, 0, 0 }; // Start in estimation mode
+
+   HFDI hfdi = FDICreate( fdimalloc,
+                          fdifree,
+                          fdiopen,
+                          fdiread,
+                          fdiwrite,
+                          fdiclose,
+                          fdiseek,
+                          cpuUNKNOWN,
+                          &erf );
+
+   if (hfdi == NULL)
+      RaiseError("Could not create FDI context.");
+
+   FDICopy( hfdi, szThisEXE, szTargetDirectory, 0, fdiNotify, NULL, &ed );
+   SendDlgItemMessage( hwndStatic, IDC_PROGRESSBAR, PBM_SETSTEP, 1, 0 );
+   SendDlgItemMessage( hwndStatic, IDC_PROGRESSBAR, PBM_SETRANGE, 0, MAKELPARAM( 0, ed.uTotalFiles ) );
+   ed.bEstimate = FALSE; // Now do real extraction
+   FDICopy( hfdi, szThisEXE, szTargetDirectory, 0, fdiNotify, NULL, &ed );
+   FDIDestroy( hfdi );
+
+   //
+   // If we're on the last dialog page, execute the command (if any)
+   //
+   ExecCommand();
+
+   //
+   // Open the folder in Explorer
+   //
+   if ( bOpenFolder )
+      OpenExplorerFolder( szTargetDirectory );
+
+   CleanUp();
+   return 0;
+}
+
+#else
+
+#include "miniz.h"
 
 /*
 
@@ -638,7 +829,6 @@ DWORD CALLBACK Extract( void *dummy )
    //
    Sleep( 300 );
 
-   //PostMessage( hwndMain, WM_COMMAND, IDC_NEXT, 0 );
    //
    // If we're on the last dialog page, execute the command (if any)
    //
@@ -730,7 +920,7 @@ DWORD CALLBACK Extract( void *dummy )
    return 0;
 }
 
-
+#endif
 
 /*
 
@@ -865,7 +1055,6 @@ void InitApp()
 
    DWORD dwDummy;
 
-   char szThisEXE[ MAX_PATH ];
    char szINIFileContents[ 16384 ];
 
 #ifdef _DEBUG
@@ -919,25 +1108,13 @@ void InitApp()
 
    lstrcpy( szPackageName, "Unnamed Archive" );
 
-   while ( MetaDataSize + 4 <= dwDummy && memcmp(szINIFileContents + MetaDataSize, "PK\x03\x04", 4 ) != 0 )
+   while ( MetaDataSize + 4 <= dwDummy && memcmp(szINIFileContents + MetaDataSize, ARCHIVE_SIGNATURE, 4 ) != 0 )
    {
       char token[1024];
       char *const argument = szINIFileContents + MetaDataSize;
       MetaDataSize += lstrlen(argument) + 1;
       if ( *gettoken( argument, "=", 0, token ) )
       {
-         if ( !lstrcmpi( token, "ZipSize" ) )
-         {
-            char *p = token;
-            gettoken(argument, "=", 1, token);
-            iZipSize = 0;
-            while ( *p )
-            {
-               iZipSize *= 10;
-               iZipSize += *p++ - '0';
-            }
-         }
-      else
          if ( !lstrcmpi( token, "Delete" ) ) iDeleteFiles = lstrstr( argument, "=1" ) != 0;
       else
          if ( !lstrcmpi( token, "NoGUI" ) ) bNoGUI = lstrstr( argument, "=1" ) != 0;
@@ -973,19 +1150,8 @@ void InitApp()
       RaiseError( "Could not get file info. This archive is likely corrupted." );
 
    iZipOffset = EndOffset + MetaDataSize;
+   iZipSize = GetFileSize(hFile, NULL) - iZipOffset;
 #endif
-
-   //
-   // Replace return carriages in intro text.
-   //
-   for ( i = 0 ; szIntroText[ i ] != '\0' ; ++i )
-   {
-      if ( ( szIntroText[ i ] == '\\' ) && ( szIntroText[ i + 1 ] == 'n' ) )
-      {
-         szIntroText[ i ] = 0x0D;
-         szIntroText[ i + 1 ] = 0x0A;
-      }
-   }
 
    //
    // Parse and expand the default extraction folder
@@ -1008,7 +1174,7 @@ void InitApp()
       }
    }
 
-   ParsePath( szDefaultPath );
+   ParsePath( szDefaultPath, _countof(szDefaultPath) );
    CleanPath( szDefaultPath );
 
    lstrcpy( szTargetDirectory, szDefaultPath );
@@ -1038,8 +1204,8 @@ void ExecCommand()
       gettoken( buf, "|", 0, location );
       gettoken( buf, "|", 1, target );
 
-      ParsePath( location );
-      ParsePath( target );
+      ParsePath( location, _countof(location) );
+      ParsePath( target, _countof(target) );
 
       CleanPath( location );
       CleanPath( target );
@@ -1061,12 +1227,12 @@ void ExecCommand()
    //
    if ( *szExecuteCommand )
    {
-      char szExecCommandAndPath[ MAX_PATH ];
+      char szExecCommandAndPath[ 4096 ];
 
       CleanPath( szTargetDirectory );
 
       lstrcpy( szExecCommandAndPath, szExecuteCommand );
-      ParsePath( szExecCommandAndPath );
+      ParsePath( szExecCommandAndPath, _countof(szExecCommandAndPath) );
       CleanPath( szExecCommandAndPath );
 
       //
