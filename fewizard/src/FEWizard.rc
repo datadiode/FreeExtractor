@@ -48,14 +48,14 @@ END
 IDD_SPLASH DIALOGEX 0, 0, 335, 192
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
 EXSTYLE WS_EX_CONTROLPARENT
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "FreeExtractor Wizard",IDC_FENAME,117,7,207,13,0,
                     WS_EX_TRANSPARENT
     LTEXT           "",IDC_VERSION_DATE,118,19,207,8,0,WS_EX_TRANSPARENT
     LTEXT           "",IDC_INTROTEXT,118,34,208,57,0,WS_EX_TRANSPARENT
     LTEXT           "http://www.disoriented.com",IDC_URL,133,95,193,10,
-                    SS_NOTIFY|WS_TABSTOP,WS_EX_TRANSPARENT
+                    SS_NOTIFY,WS_EX_TRANSPARENT
     LTEXT           "Click 'Next' to continue.",IDC_CLICKNEXT,118,174,207,11,
                     0,WS_EX_TRANSPARENT
 END
@@ -65,14 +65,14 @@ STYLE DS_LOCALEDIT | DS_CONTROL | WS_CHILD | WS_VISIBLE
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    PUSHBUTTON      "O&pen",IDC_OPENINI,218,35,57,14
-    PUSHBUTTON      "&Open",IDC_OPEN,218,65,57,14
     EDITTEXT        IDC_INIPATH,0,36,213,12,ES_AUTOHSCROLL | ES_READONLY |
-                    NOT WS_BORDER,WS_EX_STATICEDGE
+                    NOT WS_BORDER | NOT WS_TABSTOP,WS_EX_STATICEDGE
+    PUSHBUTTON      "O&pen",IDC_OPENINI,218,35,57,14
     EDITTEXT        IDC_ZIPPATH,0,66,213,12,ES_AUTOHSCROLL | ES_READONLY |
-                    NOT WS_BORDER,WS_EX_STATICEDGE
-    EDITTEXT        IDC_EXEOUT,0,96,276,12,ES_READONLY | NOT WS_BORDER,
-                    WS_EX_STATICEDGE
+                    NOT WS_BORDER | NOT WS_TABSTOP,WS_EX_STATICEDGE
+    PUSHBUTTON      "&Open",IDC_OPEN,218,65,57,14
+    EDITTEXT        IDC_EXEOUT,0,96,276,12,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP,WS_EX_STATICEDGE
     LTEXT           "Presets INI file:",IDC_INILABEL,0,28,52,8
     LTEXT           "Source ZIP file:",IDC_ZIPLABEL,0,58,52,8
     LTEXT           "Output EXE:",IDC_OUTLABEL,0,88,42,8
@@ -108,7 +108,7 @@ BEGIN
     CONTROL         "R&un in 64 bit subsystem",IDC_SUBSYSTEM64,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,35,267,10
     CONTROL         "&Automatically extract to default path",IDC_AUTOEXTRACT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,49,267,10
+                    "Button",BS_AUTO3STATE | WS_TABSTOP,0,49,267,10
     CONTROL         "&Open Destination Folder in Windows Explorer when completed",
                     IDC_OPENFOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,
                     63,267,10

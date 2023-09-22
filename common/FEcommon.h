@@ -60,7 +60,7 @@
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.49"
+#define VERSION            "v1.50"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
@@ -117,7 +117,6 @@ char szExecuteCommand[ MAX_PATH ] = "";
 char szURL[ 255 ] = "";
 char szConfirmMessage[ 1024 ] = "";
 char szIntroText[ 1024 ];
-char szINIPath[ MAX_PATH ] = "";
 char szShortcut[ 10240 ] = "";
 char szTargetDirectory[ MAX_PATH ];
 
@@ -125,7 +124,7 @@ int iCurrentPage = 1;
 
 BOOL bRunElevated = FALSE;
 BOOL bSubsystem64 = FALSE;
-BOOL bAutoExtract = FALSE;
+UINT uAutoExtract = 0;
 BOOL bOpenFolder = FALSE;
 BOOL bDeleteFiles = FALSE;
 BOOL bNoGUI = FALSE;
@@ -213,8 +212,6 @@ void RaiseError( LPTSTR szTheErrorText )
 void LoadDialog( int Resource )
 {
    hwndStatic = CreateDialog( ghInstance, MAKEINTRESOURCE( Resource ), hwndMain, ChildDialogProc );
-   SetWindowPos( hwndStatic, HWND_TOP, 44, 70, 0, 0, SWP_NOSIZE );
-   SetFocus( hwndStatic );
 }
 #endif
 
@@ -356,10 +353,10 @@ char *gettoken( char *in, char *delimiter, int tokennum, char *out )
    IsExtension
  
 */
-BOOL IsExtension(char *exec, char *exten)
+BOOL IsExtension(const char *exec, const char *exten)
 {
-   char *p = exten + lstrlen(exten);
-   char *q = *exec == '"' ? lstrstr( exec + 1, "\"" ) : exec + lstrlen(exec);
+   const char *p = exten + lstrlen(exten);
+   const char *q = *exec == '"' ? lstrstr( exec + 1, "\"" ) : exec + lstrlen(exec);
    while ((p > exten) && (q > exec))
    {
       if ((*--p & ~0x20) != (*--q & ~0x20))
@@ -402,9 +399,9 @@ void queryShellFolders( char *name, char *out )
    *out = '\0';
    if ( RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_READ, &hKey ) == ERROR_SUCCESS )
    {
-      int l = MAX_PATH;
-      int t = REG_SZ;
-      RegQueryValueEx( hKey, name, NULL, &t, out, &l );
+      DWORD l = MAX_PATH;
+      DWORD t = REG_SZ;
+      RegQueryValueEx( hKey, name, NULL, &t, ( LPBYTE ) out, &l );
       RegCloseKey( hKey );
    }
 }
@@ -814,7 +811,7 @@ DWORD CALLBACK Build( void *dummy )
    p += wsprintf(p, "Intro=%s", szIntroText) + 1;
    p += wsprintf(p, "URL=%s", szURL) + 1;
 
-   if ( bAutoExtract ) p += wsprintf(p, "AutoExtract=1" ) + 1;
+   if ( uAutoExtract ) p += wsprintf(p, "AutoExtract=%u", uAutoExtract) + 1;
    if ( bOpenFolder ) p += wsprintf(p, "OpenFolder=1" ) + 1;
    if ( bDeleteFiles ) p += wsprintf(p, "Delete=1" ) + 1;
    if ( bNoGUI ) p += wsprintf(p, "NoGUI=1" ) + 1;

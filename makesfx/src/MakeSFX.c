@@ -120,7 +120,9 @@ int main( int argc, char *argv[] )
       else
          if ( !_strcmpi( token, "/subsystem64" ) ) bSubsystem64 = TRUE;
       else
-         if ( !_strcmpi( token, "/autoextract" ) ) bAutoExtract = TRUE;
+         if ( !_strcmpi( token, "/autoextract" ) ) uAutoExtract = 1;
+      else
+         if ( !_strcmpi( token, "/noautoextract" ) ) uAutoExtract = 2;
       else
          if ( !_strcmpi( token, "/openexplorerwindow" ) ) bOpenFolder = TRUE;
       else
@@ -132,7 +134,7 @@ int main( int argc, char *argv[] )
       else
          if ( !_strcmpi( token, "/nogui" ) )
          {
-            bAutoExtract = TRUE;
+            uAutoExtract = 1;
             bDisableSplashScreen = TRUE;
             bNoGUI = TRUE;
             strcpy( szPackageName, "[GUI-less archive]" );
@@ -176,6 +178,7 @@ int main( int argc, char *argv[] )
             "  /subsystem64                        Run in 64 bit subsystem.\n"
             "  /autoextract                        Automatically extract the contents to\n"
             "                                      the default path. Don't prompt the user.\n"
+            "  /noautoextract                      Disable /autoextract option in SFX.\n"
             "  /openexplorerwindow                 Open the target directory in Windows\n"
             "                                      Explorer.\n"
             "  /delete                             Deletes extracted files after program\n"

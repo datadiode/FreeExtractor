@@ -91,7 +91,7 @@ void OpenINI()
 
    bRunElevated = GetPrivateProfileInt( "FE", "RunElevated", 0, szINIPath );
    bSubsystem64 = GetPrivateProfileInt( "FE", "Subsystem64", 0, szINIPath );
-   bAutoExtract = GetPrivateProfileInt( "FE", "AutoExtract", 0, szINIPath );
+   uAutoExtract = GetPrivateProfileInt( "FE", "AutoExtract", 0, szINIPath );
    bOpenFolder = GetPrivateProfileInt( "FE", "OpenFolder", 0, szINIPath );
    bDeleteFiles = GetPrivateProfileInt( "FE", "DeleteFiles", 0, szINIPath );
 
@@ -126,8 +126,6 @@ void OpenINI()
 
 void WinMainCRTStartup()
 {
-   LPTSTR lpCmdLine = GetCommandLine();
-
    char buf[ MAX_PATH ];
 
    ghInstance = GetModuleHandle( NULL );
@@ -167,7 +165,7 @@ void WinMainCRTStartup()
    //
    // We're done initializing. Show the main dialog.
    //
-   DialogBoxParam( ghInstance, MAKEINTRESOURCE( IDD_TEMPLATE ), NULL, MainDlgProc, (LPARAM) lpCmdLine );
+   DialogBox( ghInstance, MAKEINTRESOURCE( IDD_TEMPLATE ), NULL, MainDlgProc );
    ExitProcess( 0 );
 }
 
@@ -281,9 +279,7 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       // Check to see if a filename was passed from the command
       // line. If so, skip the splash screen.
       //
-      p = ( char * ) lParam;
-      iCurrentPage = *p ? ZIP_PAGE : SPLASH_PAGE;
-      SetDialogPage();
+      p = GetCommandLine();
 
       for ( ; ( q = PathGetArgs( p ) ) > p ; p = q )
       {
@@ -295,19 +291,29 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             lstrcpy( szZipFileName, p );
             if ( !IsZipFile( szZipFileName ) )
                RaiseError( "The file you have specified is not a ZIP file." );
-            Open();
          }
-         else if (PathMatchSpec(p, "*.cab"))
+         else if ( PathMatchSpec( p, "*.cab" ) )
          {
-            lstrcpy(szZipFileName, p);
-            if (!IsCabFile(szZipFileName))
-               RaiseError("The file you have specified is not a CAB file.");
-            Open();
+            lstrcpy( szZipFileName, p );
+            if ( !IsCabFile( szZipFileName ) )
+               RaiseError( "The file you have specified is not a CAB file." );
          }
          else if ( PathMatchSpec( p, "*.ini" ) )
          {
             lstrcpy( szINIPath, p );
          }
+      }
+
+      if ( *szZipFileName )
+      {
+          iCurrentPage = ZIP_PAGE;
+          SetDialogPage();
+          Open();
+      }
+      else
+      {
+          iCurrentPage = SPLASH_PAGE;
+          SetDialogPage();
       }
 
       if ( *szINIPath )
@@ -325,7 +331,6 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 
    case WM_CONTEXTMENU:
       {
-         POINT pt = { GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) };
          HMENU hRightClick = LoadMenu( ghInstance, MAKEINTRESOURCE( IDR_MENU1 ) );
          HMENU hmenuTrackPopup = GetSubMenu( hRightClick, 0 );
          TrackPopupMenu( hmenuTrackPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ), 0, hDlg, NULL );
@@ -489,7 +494,9 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             DestroyMenu( hShortcuts );
             hShortcuts = CreatePopupMenu();
 
-            bAutoExtract = bOpenFolder = bDeleteFiles = FALSE;
+            uAutoExtract = 0;
+            bOpenFolder = FALSE;
+            bDeleteFiles = FALSE;
 
             SetDlgItemText( hDlg, IDC_NEXT, "Next >" );
             SetDlgItemText( hDlg, IDC_CANCEL, "Cancel" );
@@ -503,6 +510,10 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
          CheckSaveSettings();
          CleanUp();
          return TRUE;
+
+      default:
+         PostMessage( hwndStatic, message, wParam, lParam );
+         break;
       }
       return TRUE;
    }
@@ -522,20 +533,20 @@ void SetDialogPage()
 {
    int i, n;
    char *p;
+   HWND hwndFocus;
 
    if ( hwndStatic != NULL ) DestroyWindow( hwndStatic );
 
    LoadDialog( iDialogArray[ iCurrentPage ] );
+   if ( iCurrentPage != SPLASH_PAGE )
+      SetWindowPos( hwndStatic, HWND_TOP, 44, 70, 0, 0, SWP_NOSIZE | SWP_NOCOPYBITS );
 
    DragAcceptFiles( hwndMain, iCurrentPage == ZIP_PAGE );
 
    SetBannerText( szBannerText[ iCurrentPage ] );
    SetSubBannerText( szSubBannerText[ iCurrentPage ] );
 
-   SetWindowPos( GetDlgItem( hwndMain, IDC_GLYPH ), HWND_TOP, DLG_X_SCALE( 440 ), 9, 0, 0, SWP_NOSIZE );
-   SetWindowPos( GetDlgItem( hwndMain, IDC_INTROBMP ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
    SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_TOP, 0, 59, 0, 0, SWP_NOSIZE );
-   SetWindowPos( GetDlgItem( hwndMain, IDC_WHITEBANNER ), HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE );
    SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_TOP, 22, 12, 0, 0, SWP_NOSIZE );
    SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_TOP, 44, 27, 0, 0, SWP_NOSIZE );
 
@@ -556,14 +567,9 @@ void SetDialogPage()
       SetWindowPos( GetDlgItem( hwndStatic, IDC_VERSION_DATE ), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE );
       SetWindowPos( GetDlgItem( hwndStatic, IDC_URL ), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE );
 
-      SetWindowPos( GetDlgItem( hwndMain, IDC_WHITEBANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
       SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
       SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
       SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-      SetWindowPos( GetDlgItem( hwndMain, IDC_GLYPH ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-      SetWindowPos( GetDlgItem( hwndMain, IDC_INTROBMP ), HWND_BOTTOM, 0, 0, 0, 0, SWP_NOSIZE );
-
-      SetWindowPos( hwndStatic, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE );
 
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
@@ -617,11 +623,11 @@ void SetDialogPage()
       SetDlgItemText( hwndStatic, IDC_DEFAULT_EXTRACTION_PATH, szExtractionPath );
       SetDlgItemText( hwndStatic, IDC_EXEC, szExecuteCommand );
 
-      if ( bRunElevated ) CheckDlgButton( hwndStatic, IDC_RUNELEVATED, BST_CHECKED );
-      if ( bSubsystem64 ) CheckDlgButton( hwndStatic, IDC_SUBSYSTEM64, BST_CHECKED );
-      if ( bAutoExtract ) CheckDlgButton( hwndStatic, IDC_AUTOEXTRACT, BST_CHECKED );
-      if ( bOpenFolder ) CheckDlgButton( hwndStatic, IDC_OPENFOLDER, BST_CHECKED );
-      if ( bDeleteFiles ) CheckDlgButton( hwndStatic, IDC_DELETEFILES, BST_CHECKED );
+      CheckDlgButton( hwndStatic, IDC_RUNELEVATED, bRunElevated );
+      CheckDlgButton( hwndStatic, IDC_SUBSYSTEM64, bSubsystem64 );
+      CheckDlgButton( hwndStatic, IDC_AUTOEXTRACT, uAutoExtract );
+      CheckDlgButton( hwndStatic, IDC_OPENFOLDER, bOpenFolder );
+      CheckDlgButton( hwndStatic, IDC_DELETEFILES, bDeleteFiles );
 
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
@@ -697,6 +703,13 @@ void SetDialogPage()
       DLGITEM_SETFONT( hwndStatic, IDC_SAVESETTINGS )
       break;
    }
+
+   SendDlgItemMessage( hwndMain, IDC_BACK, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
+   SendDlgItemMessage( hwndMain, IDC_NEXT, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
+   SetFocus( hwndMain );
+   hwndFocus = GetFocus();
+   if ( SendMessage( hwndFocus, WM_GETDLGCODE, 0, 0 ) & DLGC_UNDEFPUSHBUTTON )
+      SendMessage( hwndFocus, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
 }
 
 
@@ -719,6 +732,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
          LV_COLUMN lvColumn;
 
          hWndListView = GetDlgItem( hDlg, IDC_LIST );
+         ListView_SetExtendedListViewStyle( hWndListView, LVS_EX_FULLROWSELECT );
 
          lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
          lvColumn.fmt = LVCFMT_LEFT;
@@ -741,62 +755,6 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
          return TRUE;
       }
       return FALSE;
-
-   case WM_NOTIFY:
-      {
-         NMHDR* notify = ( NMHDR* ) lParam;
-
-         if ( notify->hwndFrom == hWndListView )
-         {
-            NM_LISTVIEW * nmlv = ( NM_LISTVIEW* ) notify;
-
-            if ( notify->code == NM_CLICK )
-            {
-               LV_HITTESTINFO hti;
-               POINT pt;
-
-
-               GetCursorPos( &pt );
-               ScreenToClient( hWndListView, &pt );
-
-               hti.pt.x = pt.x;
-               hti.pt.y = pt.y;
-
-               iSelectedIndex = ListView_HitTest( hWndListView, &hti );
-
-               if ( iSelectedIndex >= 0 )
-               {
-                  LV_ITEM lv_item;
-
-                  lv_item.mask = LVIF_PARAM;
-                  lv_item.iItem = iSelectedIndex;
-                  lv_item.iSubItem = 0;
-
-                  if ( ListView_GetItem( hWndListView, &lv_item ) )
-                  {
-                     //
-                     // Enable the 'Remove' button
-                     //
-                     EnableWindow( GetDlgItem( hDlg, IDC_REMOVE_SC ), TRUE );
-
-                     //
-                     // Redraw
-                     //
-                     ListView_RedrawItems( hWndListView, iSelectedIndex, iSelectedIndex );
-                  }
-               }
-               else
-               {
-                  //
-                  // Disable the 'Remove' button
-                  //
-                  EnableWindow( GetDlgItem( hDlg, IDC_REMOVE_SC ), FALSE );
-
-               }
-            }
-         }
-         return TRUE;
-      }
 
    case WM_PAINT:
       if ( iCurrentPage == SPLASH_PAGE )
@@ -905,7 +863,12 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
             //
             // Remove selected entry from the stack
             //
-            DeleteMenu( hShortcuts, iSelectedIndex, MF_BYPOSITION );
+            int iItem = ListView_GetItemCount( hWndListView );
+            while ( iItem-- )
+            {
+               if ( ListView_GetItemState( hWndListView, iItem, LVIS_SELECTED ) )
+                  DeleteMenu( hShortcuts, iItem, MF_BYPOSITION );
+            }
             RefreshShortcuts();
             return TRUE;
          }
@@ -977,7 +940,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
          return TRUE;
 
       case IDC_AUTOEXTRACT:
-         bAutoExtract = IsDlgButtonChecked( hDlg, IDC_AUTOEXTRACT );
+         uAutoExtract = IsDlgButtonChecked( hDlg, IDC_AUTOEXTRACT );
          return TRUE;
 
       case IDC_OPENFOLDER:
@@ -1084,7 +1047,7 @@ void SetConfirmMessage()
 {
    int n;
 
-   if ( !bAutoExtract )
+   if ( uAutoExtract == 0 )
    {
       lstrcpy( szConfirmMessage, "The user will be given the option to enter a path to extract the files to" );
 
@@ -1133,7 +1096,7 @@ void SetConfirmMessage()
       {
          lstrcat( szConfirmMessage, "automatically open the target folder" );
 
-         if ( bAutoExtract && *szExtractionPath )
+         if ( uAutoExtract == 1 && *szExtractionPath )
          {
             lstrcat( szConfirmMessage, " (\"" );
             lstrcat( szConfirmMessage, szExtractionPath );
@@ -1284,9 +1247,9 @@ INT_PTR CALLBACK ShortcutDlgProc ( HWND hDlg, UINT message, WPARAM wParam, LPARA
 
 BOOL WINAPI WritePrivateProfileQuoted(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpString, LPCTSTR lpFileName)
 {
-   LPTSTR lpQuoted = _alloca((lstrlen(lpString) + 3) * sizeof(TCHAR));
-   wsprintf(lpQuoted, TEXT("\"%s\""), lpString);
-   return WritePrivateProfileString(lpAppName, lpKeyName, lpQuoted, lpFileName);
+   LPTSTR lpQuoted = _alloca(IS_INTRESOURCE(lpString) ? 12 : (lstrlen(lpString) + 3) * sizeof(TCHAR));
+   wsprintf(lpQuoted, IS_INTRESOURCE(lpString) ? TEXT("%u") : TEXT("\"%s\""), lpString);
+   return WritePrivateProfileString(lpAppName, lpKeyName, lpString ? lpQuoted : NULL, lpFileName);
 }
 
 /*
@@ -1310,26 +1273,28 @@ void CheckSaveSettings()
          WritePrivateProfileString( "FE", "ExtractPath", szExtractionPath, szINIPath );
          WritePrivateProfileQuoted( "FE", "Execute", szExecuteCommand, szINIPath );
 
-         WritePrivateProfileString( "FE", "RunElevated", bRunElevated ? "1" : NULL, szINIPath );
-         WritePrivateProfileString( "FE", "Subsystem64", bSubsystem64 ? "1" : NULL, szINIPath );
-         WritePrivateProfileString( "FE", "AutoExtract", bAutoExtract ? "1" : NULL, szINIPath );
-         WritePrivateProfileString( "FE", "OpenFolder", bOpenFolder ? "1" : NULL, szINIPath );
-         WritePrivateProfileString( "FE", "DeleteFiles", bDeleteFiles ? "1" : NULL, szINIPath );
+         WritePrivateProfileQuoted( "FE", "RunElevated", MAKEINTRESOURCE( bRunElevated ), szINIPath );
+         WritePrivateProfileQuoted( "FE", "Subsystem64", MAKEINTRESOURCE( bSubsystem64 ), szINIPath );
+         WritePrivateProfileQuoted( "FE", "AutoExtract", MAKEINTRESOURCE( uAutoExtract ), szINIPath );
+         WritePrivateProfileQuoted( "FE", "OpenFolder", MAKEINTRESOURCE( bOpenFolder ), szINIPath );
+         WritePrivateProfileQuoted( "FE", "DeleteFiles", MAKEINTRESOURCE( bDeleteFiles ), szINIPath );
 
          WritePrivateProfileSection( "Shortcuts", szShortcut, szINIPath );
 
          //
          // Replace return carriages in intro text.
          //
-         for (i = 0; szIntroText[i] != '\0'; ++i)
+         for ( i = 0 ; szIntroText[ i ] ; ++i )
          {
-            if ((szIntroText[i] == '\\') && (szIntroText[i + 1] == 'n'))
-               szIntroText[++i] = '\0';
+            if ( szIntroText[ i ] == 0x0D ) 
+               szIntroText[ i ] = '\\';
+            else if ( szIntroText[ i ] == 0x0A )
+               szIntroText[ i ] = '\0';
          }
-         szIntroText[++i] = '\0';
+         szIntroText[ ++i ] = '\0';
 
-         WritePrivateProfileSection("IntroText", NULL, szINIPath);
-         WritePrivateProfileSection("IntroText", szIntroText, szINIPath);
+         WritePrivateProfileSection( "IntroText", NULL, szINIPath );
+         WritePrivateProfileSection( "IntroText", szIntroText, szINIPath );
       }
    }
 }

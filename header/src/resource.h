@@ -1,7 +1,3 @@
-//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by header.rc
-//
 #define IDI_SETUP1                      101
 #define IDD_TEMPLATE                    102
 #define IDB_INTRO                       103
@@ -24,7 +20,6 @@
 #define IDC_INTROBANNER                 1009
 #define IDC_URL                         1010
 #define IDC_OPENFOLDER                  1011
-#define IDC_GLYPH                       1012
 #define IDC_BOTTOMFRAME                 1013
 #define IDC_AUTOCREATEDIR               1014
 #define IDC_BANNER                      1015
@@ -32,22 +27,6 @@
 #define IDC_SUBBANNER                   1017
 #define IDC_STATUS                      1018
 #define IDC_WHITEBANNER                 1019
-#define IDC_WATERMARK                   1019
-#define IDC_INTROBMP                    1020
-#define IDC_WHITEBACK                   1021
+#define IDC_TITLE                       1021
 #define IDC_TOPFRAME                    1022
-#define IDC_RESPLASH                    1023
-#define IDC_TITLE                       10034
 #define IDM_ABOUT                       40001
-#define IDM_INFO                        40002
-
-// Next default values for new objects
-// 
-#ifdef APSTUDIO_INVOKED
-#ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        137
-#define _APS_NEXT_COMMAND_VALUE         40004
-#define _APS_NEXT_CONTROL_VALUE         1026
-#define _APS_NEXT_SYMED_VALUE           101
-#endif
-#endif

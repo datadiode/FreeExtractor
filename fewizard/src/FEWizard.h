@@ -85,9 +85,8 @@ char const szWizIntroText[] =
    "\n"
    "For more information, consult the included documentation (by pressing F1) or visit the FreeExtractor homepage.";
 
-char szHelpPath[ MAX_PATH ] = "";
-
-int iSelectedIndex;
+char szHelpPath[ MAX_PATH ];
+char szINIPath[ MAX_PATH ];
 
 HWND hWndListView;
 

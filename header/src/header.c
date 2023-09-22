@@ -84,23 +84,23 @@ void WinMainCRTStartup()
       //
       // If Tahoma exists, use it. Else, default to "MS Shell Dlg"
       //
-      if (DoesFontExist("Segoe UI"))
+      if ( DoesFontExist( "Segoe UI" ) )
       {
-         lstrcpy(szActiveFont, "Segoe UI");
+         lstrcpy( szActiveFont, "Segoe UI" );
       }
-      else if (DoesFontExist("Tahoma"))
+      else if ( DoesFontExist( "Tahoma" ) )
       {
-         lstrcpy(szActiveFont, "Tahoma");
+         lstrcpy( szActiveFont, "Tahoma" );
       }
       else
       {
-         lstrcpy(szActiveFont, "MS Shell Dlg");
+         lstrcpy( szActiveFont, "MS Shell Dlg" );
       }
 
       //
       // Normal (GUI'ed) usage: Show the main dialog box
       //
-      DialogBox(ghInstance, MAKEINTRESOURCE(IDD_TEMPLATE), NULL, MainDlgProc);
+      DialogBox( ghInstance, MAKEINTRESOURCE( IDD_TEMPLATE ), NULL, MainDlgProc );
    }
    ExitProcess( 0 );
 }
@@ -298,7 +298,6 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       }
       return FALSE;
 
-   case WM_QUIT:
    case WM_CLOSE:
       PostMessage( hDlg, WM_COMMAND, IDC_CANCEL, 0 );
       return TRUE;
@@ -312,37 +311,20 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
          return TRUE;
 
       case IDC_NEXT:
-         switch ( iCurrentPage )
+         if ( iCurrentPage == EXTRACT_PAGE )
          {
-         case SPLASH_PAGE:
-            //
-            // If bAutoExtract, skip the path dialog
-            //
-            if ( !bAutoExtract )
-               break;
-            iCurrentPage = EXTRACT_PAGE;
-            // fall through
-         case EXTRACT_PAGE:
             //
             // They've chosen an output directory, and they're ready to extract.
             //
             CleanPath( szTargetDirectory );
 
-            if ( bAutoExtract )
-            {
-               lstrcat( szTargetDirectory, "\\" );
-               CreateDirectoryRecursively( szTargetDirectory );
-            }
-            else
-            {
-               GetDlgItemText( hwndStatic, IDC_EXTRACTPATH, szTargetDirectory, MAX_PATH );
-               lstrcat( szTargetDirectory, "\\" );
-            }
+            GetDlgItemText( hwndStatic, IDC_EXTRACTPATH, szTargetDirectory, MAX_PATH );
+            lstrcat( szTargetDirectory, "\\" );
 
             //
             // If directory doesn't already exist ...
             //
-            if ( !DirectoryExists( szTargetDirectory ) && !bAutoExtract )
+            if ( !DirectoryExists( szTargetDirectory ) )
             {
                //
                // .. and "auto create dir" checkbox isn't checked
@@ -360,7 +342,6 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
                //
                CreateDirCheckError( szTargetDirectory );
             }
-            break;
          }
 
          iCurrentPage++;
@@ -379,6 +360,10 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       case IDC_CANCEL:
          CleanUp();
          return TRUE;
+
+      default:
+         PostMessage(hwndStatic, message, wParam, lParam);
+         break;
       }
    }
    return FALSE;
@@ -399,7 +384,6 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
    {
    case WM_INITDIALOG:
       hwndStatic = hDlg;
-      ShowWindow( hwndStatic, SW_SHOW );
       return TRUE;
 
    case WM_SETCURSOR:
@@ -825,11 +809,6 @@ DWORD CALLBACK Extract( void *dummy )
    }
 
    //
-   // Look pretty
-   //
-   Sleep( 300 );
-
-   //
    // If we're on the last dialog page, execute the command (if any)
    //
    ExecCommand();
@@ -857,11 +836,6 @@ DWORD CALLBACK Extract( void *dummy )
       // Prepare progress bar
       //
       SendDlgItemMessage(hwndStatic, IDC_PROGRESSBAR, PBM_SETPOS, 0, 0);
-
-      //
-      // Dramatic pause
-      //
-      Sleep( 500 );
 
       //
       // Enumerate files in reverse order
@@ -911,8 +885,6 @@ DWORD CALLBACK Extract( void *dummy )
       // before we started.
       //
       RemoveDirectory( szTargetDirectory );
-
-      Sleep( 500 );
    }
 
    mz_zip_reader_end( &zip_archive );
@@ -932,20 +904,21 @@ DWORD CALLBACK Extract( void *dummy )
 void SetDialogPage()
 {
    char szTmp[ _countof(szURL) ];
+   HWND hwndFocus;
 
    if ( hwndStatic != NULL ) DestroyWindow( hwndStatic );
 
-   ShowWindow( hwndMain, SW_SHOW );
+   SetDlgItemText(hwndMain, IDC_BOTTOMFRAME, iCurrentPage != SPLASH_PAGE ? "  FreeExtractor  " : NULL);
 
    LoadDialog( iDialogArray[ iCurrentPage ] );
+   if ( iCurrentPage != SPLASH_PAGE )
+      SetWindowPos( hwndStatic, HWND_TOP, 44, 70, 0, 0, SWP_NOSIZE | SWP_NOCOPYBITS );
 
    EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
    EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
 
    SetBannerText( szBannerText[ iCurrentPage ] );
    SetSubBannerText( szSubBannerText[ iCurrentPage ] );
-
-   ShowWindow( GetDlgItem( hwndMain, IDC_WATERMARK ), SW_SHOW );
 
    //
    // Set the default location of IDD_TEMPLATE UI elements
@@ -960,7 +933,7 @@ void SetDialogPage()
    DLGITEM_SETFONT( hwndMain, IDC_BACK )
    DLGITEM_SETFONT( hwndMain, IDC_NEXT )
    DLGITEM_SETFONT( hwndMain, IDC_CANCEL )
-   DLGITEM_SETFONT( hwndMain, IDC_WATERMARK )
+   DLGITEM_SETFONT( hwndMain, IDC_BOTTOMFRAME )
 
    switch ( iCurrentPage )
    {
@@ -971,10 +944,6 @@ void SetDialogPage()
       SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
       SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
       SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-
-      SetWindowPos( hwndStatic, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE );
-
-      ShowWindow( GetDlgItem( hwndMain, IDC_WATERMARK ), SW_HIDE );
 
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
@@ -995,9 +964,6 @@ void SetDialogPage()
          SetDlgItemText( hwndStatic, IDC_URL, szURL );
       }
 
-      if ( bAutoExtract )
-         SetDlgItemText( hwndMain, IDC_NEXT, "&Extract" );
-
       break;
 
    case EXTRACT_PAGE:
@@ -1011,7 +977,6 @@ void SetDialogPage()
 
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
-      EnableWindow( GetDlgItem( hwndMain, IDC_CANCEL ), TRUE );
 
       DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
       DLGITEM_SETFONT( hwndStatic, IDC_EXTRACTPATH )
@@ -1031,8 +996,51 @@ void SetDialogPage()
 
       break;
    }
+
+   SendDlgItemMessage( hwndMain, IDC_BACK, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
+   SendDlgItemMessage( hwndMain, IDC_NEXT, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
+   SetFocus( hwndMain );
+   hwndFocus = GetFocus();
+   if ( SendMessage( hwndFocus, WM_GETDLGCODE, 0, 0 ) & DLGC_UNDEFPUSHBUTTON )
+      SendMessage( hwndFocus, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
 }
 
+
+static BOOL IsOption(char *arg, const char *name)
+{
+   const char *p = name + lstrlen(name);
+   const char *q = arg;
+   do ++q; while (CharLower((char *)*q) != CharUpper((char *)*q));
+   while ((p > name) && (q > arg))
+   {
+      if (CharLower((char *)*--p) != CharLower((char *)*--q))
+         return FALSE;
+   }
+   return (p == name) && (q > arg) && (*--q == '/');
+}
+
+
+static void ParseCmdLine()
+{
+   char *p = GetCommandLine();
+   char *q = p + lstrlen( p );
+
+   while ( q > p )
+   {
+      if ( *--q  == '/' )
+      {
+         if ( IsOption( q, "cut" ) )
+         {
+            *q = '\0'; // hide rest of command line from $cmdline$ variable
+            break;
+         }
+         if ( IsOption( q, "autoextract" ) && uAutoExtract == 0 )
+         {
+            uAutoExtract = 1;
+         }
+      }
+   }
+}
 
 
 /*
@@ -1065,7 +1073,7 @@ void InitApp()
    //
    // Have the SFX read itself
    //
-   GetModuleFileName(NULL, szThisEXE, MAX_PATH);
+   GetModuleFileName( NULL, szThisEXE, MAX_PATH );
 #endif
 
    hFile = CreateFile( szThisEXE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
@@ -1115,11 +1123,11 @@ void InitApp()
       MetaDataSize += lstrlen(argument) + 1;
       if ( *gettoken( argument, "=", 0, token ) )
       {
-         if ( !lstrcmpi( token, "Delete" ) ) iDeleteFiles = lstrstr( argument, "=1" ) != 0;
+         if ( !lstrcmpi( token, "Delete" ) ) iDeleteFiles = argument[sizeof "Delete"] & 0xF;
       else
-         if ( !lstrcmpi( token, "NoGUI" ) ) bNoGUI = lstrstr( argument, "=1" ) != 0;
+         if ( !lstrcmpi( token, "NoGUI" ) ) bNoGUI = argument[sizeof "NoGUI"] & 0xF;
       else
-         if ( !lstrcmpi( token, "Debug" ) ) isDebug = lstrstr( argument, "=1" ) != 0;
+         if ( !lstrcmpi( token, "Debug" ) ) isDebug = argument[sizeof "Debug"] & 0xF;
       else
          if ( !lstrcmpi( token, "Name" ) ) gettoken( argument, "=", 1, szPackageName );
       else
@@ -1129,9 +1137,9 @@ void InitApp()
       else
          if ( !lstrcmpi( token, "Intro" ) ) gettoken( argument, "=", 1, szIntroText );
       else
-         if ( !lstrcmpi( token, "AutoExtract" ) ) bAutoExtract = lstrstr( argument, "=1" ) != 0;
+         if ( !lstrcmpi( token, "AutoExtract" ) ) uAutoExtract = argument[sizeof "AutoExtract"] & 0xF;
       else
-         if ( !lstrcmpi( token, "OpenFolder" ) ) bOpenFolder = lstrstr( argument, "=1" ) != 0;
+         if ( !lstrcmpi( token, "OpenFolder" ) ) bOpenFolder = argument[sizeof "OpenFolder"] & 0xF;
       else
          if ( !lstrcmpi( token, "URL" ) ) gettoken( argument, "=", 1, szURL );
       else
@@ -1158,7 +1166,7 @@ void InitApp()
    //
    if ( *szDefaultPath == '\0' )
    {
-      if ( bAutoExtract )
+      if ( uAutoExtract == 1 )
       {
          //
          // AutoExtract is enabled and no default path was specified, so use $temp$.
@@ -1174,11 +1182,19 @@ void InitApp()
       }
    }
 
+   ParseCmdLine();
+
    ParsePath( szDefaultPath, _countof(szDefaultPath) );
    CleanPath( szDefaultPath );
 
    lstrcpy( szTargetDirectory, szDefaultPath );
 
+   if ( uAutoExtract == 1 )
+   {
+      lstrcat( szTargetDirectory, "\\" );
+      CreateDirectoryRecursively( szTargetDirectory );
+      iCurrentPage = PROGRESS_PAGE;
+   }
 }
 
 

@@ -1,3 +1,14 @@
+FreeExtractor v1.50, September 22, 2023
+
+   - SFX: Fix a visual glitch at where the bottom frame leaves room for the watermark (groupbox comes to rescue).
+   - SFX: Remove some cosmetic delays which I don't find useful.
+   - SFX: When invoked with /autoextract, act as if created with that option in first place.
+   - SFX: When the command line includes a /cut, exclude the remaining part of it from the $cmdline$ variable.
+   - FEWIZARD: Make the auto-extract checkbox 3-state, to allow instructing the SFX to neglect /autoextract.
+   - FEWIZARD: Fix writing of intro text to presets file which got broken in v1.49.
+   - Cosmetic: Don't cause distracting flicker by displacing the splash page just to move it back instantly.
+   - Cosmetic: Consistify default button handling (in particular, don't have several of them at a time).
+
 FreeExtractor v1.49, September 20, 2023
 
    - In addition to .ZIP, accept archives in .CAB format (but neglect the delete-files-after-extraction option).
