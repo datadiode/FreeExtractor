@@ -60,7 +60,7 @@
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.50"
+#define VERSION            "v1.51"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
@@ -83,18 +83,9 @@
 #define SetStatus(TheText)          SetDlgItemText(hwndStatic, IDC_PROGRESS, TheText)
 #endif
 
-#ifndef INVALID_SET_FILE_POINTER
-#define INVALID_SET_FILE_POINTER ((DWORD)-1)
-#endif
-
-
 #define OpenExplorerFolder(TheDir)  ShellExecute( NULL, "explore", TheDir, NULL, NULL, SW_SHOW )
 
-#define DLGITEM_SETFONT(hDlg, ControlID) \
-{ \
-   static HFONT hFont = NULL; \
-   FormatText( &hFont, GetDlgItem( hDlg, ControlID ), szActiveFont, iFontSize, FALSE ); \
-}
+#define DLGITEM_SETFONT(hDlg, nID)  SendDlgItemMessage( hDlg, nID, WM_SETFONT, ( WPARAM ) hActiveFont, TRUE );
 
 /*
  
@@ -110,6 +101,7 @@ HINSTANCE ghInstance;
 
 char szZipFileName[ MAX_PATH ] = "";
 char szEXEOutPath[ MAX_PATH ] = "";
+char szTargetVer[ 6 ] = "";
 char szIconPath[ MAX_PATH ] = "";
 char szExtractionPath[ MAX_PATH ] = "";
 char szPackageName[ 255 ] = "";
@@ -131,6 +123,15 @@ BOOL bNoGUI = FALSE;
 BOOL bChangeIcon = FALSE;
 BOOL isDebug = FALSE;
 
+HFONT hActiveFont;
+HFONT hActiveFontBanner;
+HFONT hActiveFontSubBanner;
+HFONT hActiveFontIntroBanner;
+HFONT hActiveFontURL;
+#ifdef _WIZARD_
+HFONT hActiveFontProductName;
+HFONT hActiveFontVersionDate;
+#endif
 char szActiveFont[ LF_FACESIZE ];
 int const iFontSize = 13;
 
@@ -226,46 +227,11 @@ void LoadDialog( int Resource )
    Formats a static text control that needs a white background (e.g. the splash screen)
  
 */
-INT_PTR FormatControl( HFONT *phf, HWND handle, HDC hDC, LONG lFontWeight, LONG lFontHeight, COLORREF FontColor, LPTSTR szFontFace, BOOL Underline, int iBackgroundMode, int StockObject )
+INT_PTR FormatControl( HFONT hf, HDC hDC, COLORREF FontColor )
 {
-   LOGFONT lf;
-   if ( ( *phf == NULL ) && GetObject( GetWindowFont( handle ), sizeof lf, &lf ) )
-   {
-      lf.lfWeight = lFontWeight;
-      lf.lfHeight = lFontHeight;
-      lf.lfUnderline = Underline;
-      lstrcpy( lf.lfFaceName, szFontFace );
-      *phf = CreateFontIndirect( &lf );
-   }
-   SelectObject( hDC, *phf );
-   SetBkMode( hDC, iBackgroundMode );
+   SelectObject( hDC, hf );
    SetTextColor( hDC, FontColor );
-   return (INT_PTR) GetStockObject( StockObject );
-}
-
-
-/*
- 
-   FormatText
- 
-   Sets the font and size of a static text control.
- 
-*/
-void FormatText( HFONT *phf, HWND handle, LPTSTR szFontName, int iFontSize, BOOL bIsBold )
-{
-   LOGFONT lf;
-   if ( ( *phf == NULL ) && GetObject( GetWindowFont( handle ), sizeof lf, &lf ) )
-   {
-      lf.lfWeight = FW_REGULAR;
-      lf.lfHeight = ( LONG ) iFontSize;
-      if ( bIsBold ) lf.lfWeight = FW_BOLD;
-      lstrcpy( lf.lfFaceName, szFontName );
-      *phf = CreateFontIndirect( &lf );
-   }
-   if ( *phf )
-   {
-      SendMessage( handle, WM_SETFONT, ( WPARAM ) *phf, TRUE );
-   }
+   return ( INT_PTR ) GetStockObject( NULL_BRUSH );
 }
 
 
@@ -744,6 +710,36 @@ DWORD CALLBACK Build( void *dummy )
       RT_RCDATA);
    DWORD const cchSTUB = SizeofResource(NULL, hSTUB);
    char* const pchSTUB = (char*)memcpy(_alloca(cchSTUB), LoadResource(NULL, hSTUB), cchSTUB);
+
+   //
+   // Patch OS version
+   //
+   IMAGE_DOS_HEADER *const mz = (IMAGE_DOS_HEADER *)pchSTUB;
+   IMAGE_NT_HEADERS *const nt = (IMAGE_NT_HEADERS *)(pchSTUB + mz->e_lfanew);
+
+   // Assert some assumptions about the memory layout of the involved structs
+   C_ASSERT(FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader.MajorOperatingSystemVersion) == FIELD_OFFSET(IMAGE_NT_HEADERS64, OptionalHeader.MajorOperatingSystemVersion));
+   C_ASSERT(FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader.MinorOperatingSystemVersion) == FIELD_OFFSET(IMAGE_NT_HEADERS64, OptionalHeader.MinorOperatingSystemVersion));
+   C_ASSERT(FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader.MajorSubsystemVersion) == FIELD_OFFSET(IMAGE_NT_HEADERS64, OptionalHeader.MajorSubsystemVersion));
+   C_ASSERT(FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader.MinorSubsystemVersion) == FIELD_OFFSET(IMAGE_NT_HEADERS64, OptionalHeader.MinorSubsystemVersion));
+
+   WORD wMajor;
+   WORD wMinor = 0;
+
+   p = szTargetVer;
+   do
+   {
+      wMajor = wMinor;
+      for (wMinor = 0; *p && *p != '.'; wMinor += *p++ & 0xF) wMinor *= 10;
+   } while (*p++);
+
+   if (wMajor != 0)
+   {
+      nt->OptionalHeader.MajorOperatingSystemVersion = wMajor;
+      nt->OptionalHeader.MinorOperatingSystemVersion = wMinor;
+      nt->OptionalHeader.MajorSubsystemVersion = wMajor;
+      nt->OptionalHeader.MinorSubsystemVersion = wMinor;
+   }
 
    //
    // Read source zip file

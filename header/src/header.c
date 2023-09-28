@@ -113,30 +113,22 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
    {
    case WM_INITDIALOG:
       SetDlgItemText( hDlg, IDC_TITLE, "FreeExtractor " VERSION );
+      SetDlgItemText( hDlg, IDC_URL, WEBSITE_URL );
       return TRUE;
 
-   case WM_LBUTTONDOWN:
-      PostMessage( hDlg, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
+   case WM_NCHITTEST:
+      SetWindowLongPtr( hDlg, DWLP_MSGRESULT, HTCAPTION );
       return TRUE;
 
    case WM_CTLCOLORSTATIC:
       switch ( GetDlgCtrlID( ( HWND ) lParam ) )
       {
       case IDC_URL:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, 13, _TEXT_BLUE_, "MS Shell Dlg", TRUE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontURL, ( HDC ) wParam, _TEXT_BLUE_ );
       case IDC_TITLE:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_BOLD, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontBanner, ( HDC ) wParam, _TEXT_BLACK_ );
       case IDC_TEXT:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontSubBanner, ( HDC ) wParam, _TEXT_BLACK_ );
       }
       return FALSE;
 
@@ -169,7 +161,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
    case WM_SETCURSOR:
       if ( GetDlgCtrlID( ( HWND ) wParam ) == IDC_URL )
       {
-         SetCursor( LoadCursor( ghInstance, MAKEINTRESOURCE( IDC_HAND1 ) ) );
+         SetCursor( LoadCursor( NULL, IDC_HAND ) );
          SetWindowLongPtr( hDlg, DWLP_MSGRESULT, 1 );
          return TRUE;
       }
@@ -205,6 +197,38 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 {
    switch ( message )
    {
+   case WM_SETFONT:
+      {
+         LOGFONT lf;
+         if ( GetObject( ( HFONT ) wParam, sizeof lf, &lf ) )
+         {
+            lf.lfHeight = iFontSize;
+            lstrcpy( lf.lfFaceName, szActiveFont );
+            lf.lfWeight = FW_REGULAR;
+            hActiveFont = CreateFontIndirect( &lf );
+            lf.lfWeight = FW_MEDIUM;
+            hActiveFontSubBanner = CreateFontIndirect( &lf );
+            lf.lfWeight = FW_BOLD;
+            hActiveFontBanner = CreateFontIndirect( &lf );
+            lf.lfHeight = 22;
+            hActiveFontIntroBanner = CreateFontIndirect( &lf );
+            lf.lfHeight = 13;
+            lf.lfWeight = FW_MEDIUM;
+            lf.lfUnderline = TRUE;
+            lstrcpy(lf.lfFaceName, "MS Shell Dlg");
+            hActiveFontURL = CreateFontIndirect(&lf);
+         }
+      }
+      break;
+
+   case WM_NCDESTROY:
+      DeleteObject( hActiveFont );
+      DeleteObject( hActiveFontBanner );
+      DeleteObject( hActiveFontSubBanner );
+      DeleteObject( hActiveFontIntroBanner );
+      DeleteObject( hActiveFontURL );
+      break;
+
    case WM_INITDIALOG:
       hwndMain = hDlg;
 
@@ -231,20 +255,16 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 
       return TRUE;
 
-   case WM_MOUSEACTIVATE:
-      if (wParam != 1 && HIWORD(lParam) != WM_LBUTTONDOWN)
-         break;
-      // fall through
-   case WM_LBUTTONDOWN:
-      PostMessage( hDlg, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
+   case WM_NCHITTEST:
+      SetWindowLongPtr( hDlg, DWLP_MSGRESULT, HTCAPTION );
       return TRUE;
 
-   case WM_CONTEXTMENU:
+   case WM_NCRBUTTONDOWN:
       {
-         HMENU hRightClick = LoadMenu( ghInstance, MAKEINTRESOURCE( IDR_MENU1 ) );
-         HMENU hmenuTrackPopup = GetSubMenu( hRightClick, 0 );
+         HMENU hmenuTrackPopup = CreatePopupMenu();
+         AppendMenu( hmenuTrackPopup, MF_STRING, IDM_ABOUT, "&About..." );
          TrackPopupMenu( hmenuTrackPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ), 0, hDlg, NULL );
-         DestroyMenu( hRightClick );
+         DestroyMenu( hmenuTrackPopup );
          return TRUE;
       }
 
@@ -252,15 +272,9 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       switch ( GetDlgCtrlID( ( HWND ) lParam ) )
       {
       case IDC_BANNER:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_BOLD, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontBanner, ( HDC ) wParam, _TEXT_BLACK_ );
       case IDC_SUBBANNER:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontSubBanner, ( HDC ) wParam, _TEXT_BLACK_ );
       }
       return FALSE;
 
@@ -386,10 +400,14 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
       hwndStatic = hDlg;
       return TRUE;
 
+   case WM_NCHITTEST:
+      SetWindowLongPtr( hDlg, DWLP_MSGRESULT, HTTRANSPARENT );
+      return TRUE;
+
    case WM_SETCURSOR:
       if ( iCurrentPage == SPLASH_PAGE && GetDlgCtrlID( ( HWND ) wParam ) == IDC_URL && *szURL != '\0' )
       {
-         SetCursor( LoadCursor( ghInstance, MAKEINTRESOURCE( IDC_HAND1 ) ) );
+         SetCursor( LoadCursor( NULL, IDC_HAND ) );
          SetWindowLongPtr( hDlg, DWLP_MSGRESULT, 1 );
          return TRUE;
       }
@@ -438,20 +456,11 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
          switch ( GetDlgCtrlID( ( HWND ) lParam ) )
          {
          case IDC_SUBBANNER:
-            {
-               static HFONT hFont = NULL;
-               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-            }
+            return FormatControl( hActiveFontSubBanner, ( HDC ) wParam, _TEXT_BLACK_ );
          case IDC_INTROBANNER:
-            {
-               static HFONT hFont = NULL;
-               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_BOLD, 22, _TEXT_BLUE_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-            }
+            return FormatControl( hActiveFontIntroBanner, ( HDC ) wParam, _TEXT_BLUE_ );
          case IDC_URL:
-            {
-               static HFONT hFont = NULL;
-               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, 13, _TEXT_BLUE_, "MS Shell Dlg", TRUE, OPAQUE, WHITE_BRUSH );
-            }
+            return FormatControl( hActiveFontURL, ( HDC ) wParam, _TEXT_BLUE_ );
          }
       }
       return FALSE;
@@ -506,13 +515,11 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
 
 #include <fdi.h>
 
-#pragma comment(lib, "cabinet.lib")
-
 typedef struct
 {
-    BOOL bEstimate;
-    UINT uTotalFiles;
-    UINT uExtractedFiles;
+   BOOL bEstimate;
+   UINT uTotalFiles;
+   UINT uExtractedFiles;
 } EXTRACTDATA;
 
 /**
@@ -520,12 +527,12 @@ typedef struct
  **/
 FNALLOC(fdimalloc)
 {
-    return LocalAlloc( LPTR, cb );
+   return LocalAlloc( LPTR, cb );
 }
 
 FNFREE(fdifree)
 {
-    LocalFree( pv );
+   LocalFree( pv );
 }
 
 /**
@@ -636,33 +643,65 @@ FNFDINOTIFY(fdiNotify)
 }
 
 /**
+ * LoadCabinetDll
+ **/
+HMODULE LoadCabinetDll()
+{
+   char path[ MAX_PATH ];
+   GetSystemDirectory( path, _countof(path) );
+   lstrcat( path, "\\cabinet.dll" );
+   return LoadLibrary( path );
+}
+
+/**
  * ExtractCabResource
  **/
 DWORD CALLBACK Extract( void *dummy )
 {
+   struct {
+      HMODULE h;
+      union
+      {
+         FARPROC fpFDICreate;
+         HFDI(DIAMONDAPI*FDICreate)(PFNALLOC, PFNFREE, PFNOPEN, PFNREAD, PFNWRITE, PFNCLOSE, PFNSEEK, int, PERF);
+      };
+      union
+      {
+         FARPROC fpFDICopy;
+         BOOL(DIAMONDAPI*FDICopy)(HFDI, LPSTR, LPSTR, int, PFNFDINOTIFY, PFNFDIDECRYPT, void *);
+      };
+      union
+      {
+         FARPROC fpFDIDestroy;
+         BOOL(DIAMONDAPI*FDIDestroy)(HFDI);
+      };
+   } const CabinetDll = {
+      LoadCabinetDll(),
+      GetProcAddress(CabinetDll.h, "FDICreate"),
+      GetProcAddress(CabinetDll.h, "FDICopy"),
+      GetProcAddress(CabinetDll.h, "FDIDestroy"),
+   };
+
 	ERF erf;
 
    EXTRACTDATA ed = { TRUE, 0, 0 }; // Start in estimation mode
 
-   HFDI hfdi = FDICreate( fdimalloc,
-                          fdifree,
-                          fdiopen,
-                          fdiread,
-                          fdiwrite,
-                          fdiclose,
-                          fdiseek,
-                          cpuUNKNOWN,
-                          &erf );
+   HFDI hfdi;
 
-   if (hfdi == NULL)
-      RaiseError("Could not create FDI context.");
+   if ( CabinetDll.FDICreate == NULL || CabinetDll.FDICopy == NULL || CabinetDll.FDIDestroy == NULL )
+      RaiseError( "Could not load cabinet.dll." );
 
-   FDICopy( hfdi, szThisEXE, szTargetDirectory, 0, fdiNotify, NULL, &ed );
+   hfdi = CabinetDll.FDICreate( fdimalloc, fdifree, fdiopen, fdiread, fdiwrite, fdiclose, fdiseek, cpuUNKNOWN, &erf );
+
+   if ( hfdi == NULL )
+      RaiseError( "Could not create FDI context." );
+
+   CabinetDll.FDICopy( hfdi, szThisEXE, szTargetDirectory, 0, fdiNotify, NULL, &ed );
    SendDlgItemMessage( hwndStatic, IDC_PROGRESSBAR, PBM_SETSTEP, 1, 0 );
    SendDlgItemMessage( hwndStatic, IDC_PROGRESSBAR, PBM_SETRANGE, 0, MAKELPARAM( 0, ed.uTotalFiles ) );
    ed.bEstimate = FALSE; // Now do real extraction
-   FDICopy( hfdi, szThisEXE, szTargetDirectory, 0, fdiNotify, NULL, &ed );
-   FDIDestroy( hfdi );
+   CabinetDll.FDICopy( hfdi, szThisEXE, szTargetDirectory, 0, fdiNotify, NULL, &ed );
+   CabinetDll.FDIDestroy( hfdi );
 
    //
    // If we're on the last dialog page, execute the command (if any)
@@ -905,27 +944,26 @@ void SetDialogPage()
 {
    char szTmp[ _countof(szURL) ];
    HWND hwndFocus;
+   DWORD dwThreadId;
+
+   UINT flags = iCurrentPage != SPLASH_PAGE ? SWP_NOSIZE | SWP_SHOWWINDOW : SWP_NOSIZE | SWP_HIDEWINDOW;
 
    if ( hwndStatic != NULL ) DestroyWindow( hwndStatic );
 
-   SetDlgItemText(hwndMain, IDC_BOTTOMFRAME, iCurrentPage != SPLASH_PAGE ? "  FreeExtractor  " : NULL);
+   EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), iCurrentPage != PROGRESS_PAGE );
+   EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), iCurrentPage == EXTRACT_PAGE );
+   SetDlgItemText( hwndMain, IDC_BOTTOMFRAME, iCurrentPage != SPLASH_PAGE ? "  FreeExtractor  " : NULL );
+
+   SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_TOP, 0, 59, 0, 0, flags );
+   SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_TOP, 22, 12, 0, 0, flags );
+   SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_TOP, 44, 27, 0, 0, flags );
 
    LoadDialog( iDialogArray[ iCurrentPage ] );
    if ( iCurrentPage != SPLASH_PAGE )
       SetWindowPos( hwndStatic, HWND_TOP, 44, 70, 0, 0, SWP_NOSIZE | SWP_NOCOPYBITS );
 
-   EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
-   EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
-
    SetBannerText( szBannerText[ iCurrentPage ] );
    SetSubBannerText( szSubBannerText[ iCurrentPage ] );
-
-   //
-   // Set the default location of IDD_TEMPLATE UI elements
-   //
-   SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_TOP, 0, 59, 0, 0, SWP_NOSIZE );
-   SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_TOP, 22, 12, 0, 0, SWP_NOSIZE );
-   SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_TOP, 44, 27, 0, 0, SWP_NOSIZE );
 
    //
    // Set Fonts
@@ -938,16 +976,6 @@ void SetDialogPage()
    switch ( iCurrentPage )
    {
    case SPLASH_PAGE:
-      //
-      // Move the UI elements off screen
-      //
-      SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-      SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-      SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-
-      EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
-      EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
-
       SetDlgItemText( hwndStatic, IDC_INTROBANNER, szPackageName );
       SetDlgItemText( hwndStatic, IDC_SUBBANNER, szIntroText );
 
@@ -975,9 +1003,6 @@ void SetDialogPage()
       SendDlgItemMessage( hwndStatic, IDC_EXTRACTPATH, EM_LIMITTEXT, 150, 0 );
       SendDlgItemMessage( hwndStatic, IDC_AUTOCREATEDIR, BM_SETCHECK, BST_CHECKED, 0 );
 
-      EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
-      EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
-
       DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
       DLGITEM_SETFONT( hwndStatic, IDC_EXTRACTPATH )
       DLGITEM_SETFONT( hwndStatic, IDC_GLYPHBROWSE )
@@ -986,13 +1011,10 @@ void SetDialogPage()
       break;
 
    case PROGRESS_PAGE:
-      EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), FALSE );
-      EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
-
       DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
       DLGITEM_SETFONT( hwndStatic, IDC_STATUS )
 
-      CloseHandle( CreateThread( NULL, 0, Extract, NULL, 0, NULL ) );
+      CloseHandle( CreateThread( NULL, 0, Extract, NULL, 0, &dwThreadId ) );
 
       break;
    }

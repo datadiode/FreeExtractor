@@ -37,6 +37,27 @@
 
 /*
 
+   Windows version numbers to choose from to set a minimum requirement to run
+   the SFX, as listed on https://www.gaijin.at/de/infos/windows-versionsnummern
+
+*/
+static const WORD rgTargetVer[] =
+{
+   0x0400, // 95
+   0x0410, // 98
+   0x0490, // ME
+   0x0500, // 2000
+   0x0501, // XP
+   0x0502, // Server 2003
+   0x0600, // Vista
+   0x0601, // 7
+   0x0602, // 8
+   0x0603, // 8.1
+   0x1000, // 10+
+};
+
+/*
+
    IsZipFile
 
    Determines if a file is a real zip file by checking the first four
@@ -84,10 +105,11 @@ void OpenINI()
    GetFullPathName( szINIPath, MAX_PATH, szINIPath, NULL );
    SetDlgItemText( hwndStatic, IDC_INIPATH, szINIPath );
 
-   GetPrivateProfileString( "FE", "Title", "", szPackageName, 255, szINIPath );
-   GetPrivateProfileString( "FE", "Website", "", szURL, 128, szINIPath );
+   GetPrivateProfileString( "FE", "Title", "", szPackageName, _countof(szPackageName), szINIPath );
+   GetPrivateProfileString( "FE", "Website", "", szURL, _countof(szURL), szINIPath );
    GetPrivateProfileString( "FE", "ExtractPath", "", szExtractionPath, MAX_PATH, szINIPath );
    GetPrivateProfileString( "FE", "Execute", "", szExecuteCommand, MAX_PATH, szINIPath );
+   GetPrivateProfileString( "FE", "OSVersion", "4.0", szTargetVer, _countof(szTargetVer), szINIPath );
 
    bRunElevated = GetPrivateProfileInt( "FE", "RunElevated", 0, szINIPath );
    bSubsystem64 = GetPrivateProfileInt( "FE", "Subsystem64", 0, szINIPath );
@@ -176,30 +198,22 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
    {
    case WM_INITDIALOG:
       SetDlgItemText( hDlg, IDC_TITLE, "FreeExtractor " VERSION );
+      SetDlgItemText( hDlg, IDC_URL, WEBSITE_URL );
       return TRUE;
 
-   case WM_LBUTTONDOWN:
-      PostMessage( hDlg, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
+   case WM_NCHITTEST:
+      SetWindowLongPtr( hDlg, DWLP_MSGRESULT, HTCAPTION );
       return TRUE;
 
    case WM_CTLCOLORSTATIC:
       switch ( GetDlgCtrlID( ( HWND ) lParam ) )
       {
       case IDC_URL:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, 13, _TEXT_BLUE_, "MS Shell Dlg", TRUE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontURL, ( HDC ) wParam, _TEXT_BLUE_ );
       case IDC_TITLE:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_BOLD, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontBanner, ( HDC ) wParam, _TEXT_BLACK_ );
       case IDC_TEXT:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontSubBanner, ( HDC ) wParam, _TEXT_BLACK_ );
       }
       return FALSE;
 
@@ -232,7 +246,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
    case WM_SETCURSOR:
       if ( GetDlgCtrlID( ( HWND ) wParam ) == IDC_URL )
       {
-         SetCursor( LoadCursor( ghInstance, MAKEINTRESOURCE( IDC_HAND1 ) ) );
+         SetCursor( LoadCursor( NULL, IDC_HAND ) );
          SetWindowLongPtr( hDlg, DWLP_MSGRESULT, 1 );
          return TRUE;
       }
@@ -269,6 +283,46 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 
    switch ( message )
    {
+   case WM_SETFONT:
+      {
+         LOGFONT lf;
+         if ( GetObject( ( HFONT ) wParam, sizeof lf, &lf ) )
+         {
+            lstrcpy( lf.lfFaceName, szActiveFont );
+            lf.lfHeight = iFontSize;
+            lf.lfWeight = FW_REGULAR;
+            hActiveFont = CreateFontIndirect( &lf );
+            lf.lfWeight = FW_MEDIUM;
+            hActiveFontSubBanner = CreateFontIndirect( &lf );
+            lf.lfWeight = FW_BOLD;
+            hActiveFontBanner = CreateFontIndirect( &lf );
+            lf.lfHeight = 22;
+            hActiveFontIntroBanner = CreateFontIndirect( &lf );
+            lf.lfHeight = 12;
+            lf.lfWeight = FW_MEDIUM;
+            hActiveFontVersionDate = CreateFontIndirect( &lf );
+            lstrcpy( lf.lfFaceName, "Verdana" );
+            lf.lfHeight = 24;
+            lf.lfWeight = FW_HEAVY;
+            hActiveFontProductName = CreateFontIndirect( &lf );
+            lstrcpy( lf.lfFaceName, "MS Shell Dlg" );
+            lf.lfHeight = 13;
+            lf.lfWeight = FW_MEDIUM;
+            lf.lfUnderline = TRUE;
+            hActiveFontURL = CreateFontIndirect( &lf );
+         }
+      }
+      break;
+
+   case WM_NCDESTROY:
+      DeleteObject( hActiveFont );
+      DeleteObject( hActiveFontBanner );
+      DeleteObject( hActiveFontSubBanner );
+      DeleteObject( hActiveFontIntroBanner );
+      DeleteObject( hActiveFontVersionDate );
+      DeleteObject( hActiveFontProductName );
+      break;
+
    case WM_INITDIALOG:
       hwndMain = hDlg;
 
@@ -321,20 +375,16 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 
       return TRUE;
 
-   case WM_MOUSEACTIVATE:
-      if (wParam != 1 && HIWORD(lParam) != WM_LBUTTONDOWN)
-         break;
-      // fall through
-   case WM_LBUTTONDOWN:
-      PostMessage( hDlg, WM_NCLBUTTONDOWN, HTCAPTION, 0 );
+   case WM_NCHITTEST:
+      SetWindowLongPtr( hDlg, DWLP_MSGRESULT, HTCAPTION );
       return TRUE;
 
-   case WM_CONTEXTMENU:
+   case WM_NCRBUTTONDOWN:
       {
-         HMENU hRightClick = LoadMenu( ghInstance, MAKEINTRESOURCE( IDR_MENU1 ) );
-         HMENU hmenuTrackPopup = GetSubMenu( hRightClick, 0 );
+         HMENU hmenuTrackPopup = CreatePopupMenu();
+         AppendMenu( hmenuTrackPopup, MF_STRING, IDM_ABOUT, "&About..." );
          TrackPopupMenu( hmenuTrackPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ), 0, hDlg, NULL );
-         DestroyMenu( hRightClick );
+         DestroyMenu( hmenuTrackPopup );
          return TRUE;
       }
 
@@ -415,15 +465,9 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       switch ( GetDlgCtrlID( ( HWND ) lParam ) )
       {
       case IDC_BANNER:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_BOLD, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontBanner, ( HDC ) wParam, _TEXT_BLACK_ );
       case IDC_SUBBANNER:
-         {
-            static HFONT hFont = NULL;
-            return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-         }
+         return FormatControl( hActiveFontSubBanner, ( HDC ) wParam, _TEXT_BLACK_ );
       }
       return FALSE;
 
@@ -465,6 +509,8 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             GetDlgItemText( hwndStatic, IDC_DEFAULT_EXTRACTION_PATH, szExtractionPath, _countof(szExtractionPath) );
             StrTrim( szExtractionPath, " \t\r\n" );
 
+            GetDlgItemText( hwndStatic, IDC_TARGETVER, szTargetVer, _countof(szTargetVer) );
+
             if ( !IsWindowEnabled( GetDlgItem( hwndStatic, IDC_DELETEFILES ) ) )
                bDeleteFiles = FALSE;
             break;
@@ -479,7 +525,7 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             //
             // Reset and start over
             //
-			iCurrentPage = 1;
+            iCurrentPage = 1;
 
             *szZipFileName = '\0';
             *szEXEOutPath = '\0';
@@ -535,20 +581,22 @@ void SetDialogPage()
    char *p;
    HWND hwndFocus;
 
+   UINT flags = iCurrentPage != SPLASH_PAGE ? SWP_NOSIZE | SWP_SHOWWINDOW : SWP_NOSIZE | SWP_HIDEWINDOW;
+
    if ( hwndStatic != NULL ) DestroyWindow( hwndStatic );
+
+   SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_TOP, 0, 59, 0, 0, flags );
+   SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_TOP, 22, 12, 0, 0, flags );
+   SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_TOP, 44, 27, 0, 0, flags );
 
    LoadDialog( iDialogArray[ iCurrentPage ] );
    if ( iCurrentPage != SPLASH_PAGE )
-      SetWindowPos( hwndStatic, HWND_TOP, 44, 70, 0, 0, SWP_NOSIZE | SWP_NOCOPYBITS );
+      SetWindowPos( hwndStatic, HWND_TOP, 44, 70, 0, 0, SWP_NOSIZE | SWP_SHOWWINDOW );
 
    DragAcceptFiles( hwndMain, iCurrentPage == ZIP_PAGE );
 
    SetBannerText( szBannerText[ iCurrentPage ] );
    SetSubBannerText( szSubBannerText[ iCurrentPage ] );
-
-   SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_TOP, 0, 59, 0, 0, SWP_NOSIZE );
-   SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_TOP, 22, 12, 0, 0, SWP_NOSIZE );
-   SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_TOP, 44, 27, 0, 0, SWP_NOSIZE );
 
    DLGITEM_SETFONT( hwndMain, IDC_BACK )
    DLGITEM_SETFONT( hwndMain, IDC_NEXT )
@@ -560,22 +608,12 @@ void SetDialogPage()
       SetBannerText( szBannerText[ iCurrentPage ] );
       SetSubBannerText( szSubBannerText[ iCurrentPage ] );
 
-      SetWindowPos( GetDlgItem( hwndStatic, IDC_URL ), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE );
-      SetWindowPos( GetDlgItem( hwndStatic, IDC_INTROTEXT ), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE );
-
-      SetWindowPos( GetDlgItem( hwndStatic, IDC_FENAME ), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE );
-      SetWindowPos( GetDlgItem( hwndStatic, IDC_VERSION_DATE ), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE );
-      SetWindowPos( GetDlgItem( hwndStatic, IDC_URL ), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE );
-
-      SetWindowPos( GetDlgItem( hwndMain, IDC_BANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-      SetWindowPos( GetDlgItem( hwndMain, IDC_SUBBANNER ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-      SetWindowPos( GetDlgItem( hwndMain, IDC_TOPFRAME ), HWND_BOTTOM, 1000, 1000, 0, 0, SWP_NOSIZE );
-
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
 
       SetDlgItemText( hwndStatic, IDC_VERSION_DATE, VERSIONDATE );
       SetDlgItemText( hwndStatic, IDC_INTROTEXT, szWizIntroText );
+      SetDlgItemText( hwndStatic, IDC_URL, WEBSITE_URL );
       break;
 
    case ZIP_PAGE:
@@ -629,6 +667,15 @@ void SetDialogPage()
       CheckDlgButton( hwndStatic, IDC_OPENFOLDER, bOpenFolder );
       CheckDlgButton( hwndStatic, IDC_DELETEFILES, bDeleteFiles );
 
+      for ( i = 0 ; i < _countof(rgTargetVer) ; ++i )
+      {
+         char sz[ 6 ];
+         wsprintf( sz, "%x.%02x", HIBYTE( rgTargetVer[ i ] ), LOBYTE( rgTargetVer[ i ] ) );
+         sz[4] = '\0'; // Cosmetic: 10.00 -> 10.0
+         SendDlgItemMessage( hwndStatic, IDC_TARGETVER, CB_ADDSTRING, 0, ( LPARAM ) sz );
+      }
+      SendDlgItemMessage( hwndStatic, IDC_TARGETVER, CB_SELECTSTRING, 0, ( LPARAM ) szTargetVer );
+
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), TRUE );
 
@@ -638,9 +685,11 @@ void SetDialogPage()
       DLGITEM_SETFONT( hwndStatic, IDC_AUTOEXTRACT )
       DLGITEM_SETFONT( hwndStatic, IDC_OPENFOLDER )
       DLGITEM_SETFONT( hwndStatic, IDC_DEFAULT_EXTRACTION_PATH )
+      DLGITEM_SETFONT( hwndStatic, IDC_TARGETVER )
       DLGITEM_SETFONT( hwndStatic, IDC_EXECLABEL )
       DLGITEM_SETFONT( hwndStatic, IDC_DELETEFILES )
       DLGITEM_SETFONT( hwndStatic, IDC_SHORTCUTLABEL )
+      DLGITEM_SETFONT( hwndStatic, IDC_TARGETVERLABEL )
       break;
 
    case SHORTCUT_PAGE:
@@ -747,10 +796,14 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
       }
       return TRUE;
 
+   case WM_NCHITTEST:
+      SetWindowLongPtr( hDlg, DWLP_MSGRESULT, HTTRANSPARENT );
+      return TRUE;
+
    case WM_SETCURSOR:
       if ( iCurrentPage == SPLASH_PAGE && GetDlgCtrlID( ( HWND ) wParam ) == IDC_URL )
       {
-         SetCursor( LoadCursor( ghInstance, MAKEINTRESOURCE( IDC_HAND1 ) ) );
+         SetCursor( LoadCursor( NULL, IDC_HAND ) );
          SetWindowLongPtr( hDlg, DWLP_MSGRESULT, 1 );
          return TRUE;
       }
@@ -818,31 +871,15 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
       {
          switch ( GetDlgCtrlID( ( HWND ) lParam ) )
          {
-         case IDC_CLICKNEXT:
-            {
-               static HFONT hFont = NULL;
-               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-            }
-         case IDC_FENAME:
-            {
-               static HFONT hFont = NULL;
-               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_HEAVY, 24, _TEXT_BLUE_, "Verdana", FALSE, OPAQUE, WHITE_BRUSH );
-            }
-         case IDC_VERSION_DATE:
-            {
-               static HFONT hFont = NULL;
-               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, 12, _TEXT_GRAY_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-            }
          case IDC_INTROTEXT:
-            {
-               static HFONT hFont = NULL;
-               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLACK_, szActiveFont, FALSE, OPAQUE, WHITE_BRUSH );
-            }
+         case IDC_CLICKNEXT:
+            return FormatControl( hActiveFontSubBanner, ( HDC ) wParam, _TEXT_BLACK_ );
+         case IDC_FENAME:
+            return FormatControl( hActiveFontProductName, ( HDC ) wParam, _TEXT_BLUE_ );
+         case IDC_VERSION_DATE:
+            return FormatControl( hActiveFontVersionDate, ( HDC ) wParam, _TEXT_GRAY_ );
          case IDC_URL:
-            {
-               static HFONT hFont = NULL;
-               return FormatControl( &hFont, ( HWND ) lParam, ( HDC ) wParam, FW_MEDIUM, iFontSize, _TEXT_BLUE_, "MS Shell Dlg", TRUE, OPAQUE, WHITE_BRUSH );
-            }
+            return FormatControl( hActiveFontURL, ( HDC ) wParam, _TEXT_BLUE_ );
          }
       }
       return FALSE;
@@ -1272,6 +1309,7 @@ void CheckSaveSettings()
          WritePrivateProfileString( "FE", "Website", szURL, szINIPath );
          WritePrivateProfileString( "FE", "ExtractPath", szExtractionPath, szINIPath );
          WritePrivateProfileQuoted( "FE", "Execute", szExecuteCommand, szINIPath );
+         WritePrivateProfileString( "FE", "OSVersion", szTargetVer, szINIPath );
 
          WritePrivateProfileQuoted( "FE", "RunElevated", MAKEINTRESOURCE( bRunElevated ), szINIPath );
          WritePrivateProfileQuoted( "FE", "Subsystem64", MAKEINTRESOURCE( bSubsystem64 ), szINIPath );

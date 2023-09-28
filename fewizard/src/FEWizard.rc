@@ -54,14 +54,14 @@ BEGIN
                     WS_EX_TRANSPARENT
     LTEXT           "",IDC_VERSION_DATE,118,19,207,8,0,WS_EX_TRANSPARENT
     LTEXT           "",IDC_INTROTEXT,118,34,208,57,0,WS_EX_TRANSPARENT
-    LTEXT           "http://www.disoriented.com",IDC_URL,133,95,193,10,
+    LTEXT           "",IDC_URL,133,95,193,10,
                     SS_NOTIFY,WS_EX_TRANSPARENT
     LTEXT           "Click 'Next' to continue.",IDC_CLICKNEXT,118,174,207,11,
                     0,WS_EX_TRANSPARENT
 END
 
 IDD_ZIPFILE DIALOGEX 0, 0, 276, 135
-STYLE DS_LOCALEDIT | DS_CONTROL | WS_CHILD | WS_VISIBLE
+STYLE DS_LOCALEDIT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -81,7 +81,7 @@ BEGIN
 END
 
 IDD_OPTIONS DIALOGEX 0, 0, 276, 135
-STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+STYLE DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -99,12 +99,14 @@ BEGIN
 END
 
 IDD_ADVOPTIONS DIALOGEX 0, 0, 276, 136
-STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+STYLE DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
+    LTEXT           "The following options allow you to further customize this self-extractor. These options are intended primarily for software distribution and are all optional.",
+                    IDC_TEXT,0,0,275,20
     CONTROL         "&Run as administrator",IDC_RUNELEVATED,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,21,267,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,21,120,10
     CONTROL         "R&un in 64 bit subsystem",IDC_SUBSYSTEM64,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,35,267,10
     CONTROL         "&Automatically extract to default path",IDC_AUTOEXTRACT,
@@ -112,22 +114,22 @@ BEGIN
     CONTROL         "&Open Destination Folder in Windows Explorer when completed",
                     IDC_OPENFOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,
                     63,267,10
-    EDITTEXT        IDC_DEFAULT_EXTRACTION_PATH,0,85,267,13,ES_AUTOHSCROLL |
-                    NOT WS_BORDER,WS_EX_STATICEDGE
-    EDITTEXT        IDC_EXEC,0,111,267,13,ES_AUTOHSCROLL | NOT WS_BORDER,
-                    WS_EX_STATICEDGE
     LTEXT           "Default &Extraction Path (optional)",IDC_PATHLABEL,0,
                     76,267,8
+    EDITTEXT        IDC_DEFAULT_EXTRACTION_PATH,0,85,267,13,ES_AUTOHSCROLL |
+                    NOT WS_BORDER,WS_EX_STATICEDGE
     LTEXT           "E&xecute when completed",IDC_EXECLABEL,0,103,267,8
-    LTEXT           "The following options allow you to further customize this self-extractor. These options are intended primarily for software distribution and are all optional.",
-                    IDC_TEXT,0,0,275,20
+    EDITTEXT        IDC_EXEC,0,111,267,13,ES_AUTOHSCROLL | NOT WS_BORDER,
+                    WS_EX_STATICEDGE
     CONTROL         "&Delete extracted files when program finishes",
                     IDC_DELETEFILES,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,10,126,257,10
+    LTEXT           "OS &Version:",IDC_TARGETVERLABEL,190,21,45,8
+    COMBOBOX        IDC_TARGETVER,235,19,32,200,CBS_DROPDOWNLIST | WS_TABSTOP
 END
 
 IDD_CONFIRM DIALOGEX 0, 0, 276, 136
-STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+STYLE DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -141,7 +143,7 @@ BEGIN
 END
 
 IDD_PROGRESS DIALOGEX 0, 0, 276, 136
-STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+STYLE DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -152,7 +154,7 @@ BEGIN
 END
 
 IDD_FINISHED DIALOGEX 0, 0, 276, 136
-STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+STYLE DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -166,7 +168,7 @@ BEGIN
 END
 
 IDD_SHORTCUT DIALOGEX 0, 0, 276, 136
-STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+STYLE DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -180,7 +182,7 @@ BEGIN
 END
 
 IDD_ICON DIALOGEX 0, 0, 276, 136
-STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+STYLE DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -219,30 +221,8 @@ BEGIN
     LTEXT           "Copyright © 2000-2023 Andrew Fawcett and contributors.\n\nFreeExtractor is free and open source.",
                     IDC_TEXT,40,24,158,43
     DEFPUSHBUTTON   "OK",IDOK,143,84,49,14,WS_GROUP
-    LTEXT           "http://www.disoriented.com",IDC_URL,40,73,158,8,SS_NOTIFY
+    LTEXT           "",IDC_URL,40,73,158,8,SS_NOTIFY
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDR_MENU1 MENU DISCARDABLE
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&About FreeExtractor",        IDM_ABOUT
-    END
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_HAND1               CURSOR  DISCARDABLE     "..\\res\\hand.cur"
 
 
 /////////////////////////////////////////////////////////////////////////////

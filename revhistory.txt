@@ -1,3 +1,11 @@
+FreeExtractor v1.51, September 22, 2023
+
+   - SFX: Load the cabinet.dll explicitly specifying its full path, to thwart possible DLL hijacking attacks.
+   - Rework font handling: Create font handles once for all when the main dialog receives WM_SETFONT.
+   - Replace IDC_HAND1 cursor with stock IDC_HAND cursor (may fail in pre-98/2000 but hey).
+   - Allow to set a Windows version number between 4.0 and 10.0 as a minimum requirement to run the SFX.
+   - Cosmetic: Further flicker reduction.
+
 FreeExtractor v1.50, September 22, 2023
 
    - SFX: Fix a visual glitch at where the bottom frame leaves room for the watermark (groupbox comes to rescue).

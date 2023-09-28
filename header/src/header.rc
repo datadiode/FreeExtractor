@@ -55,7 +55,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Please wait while the files in this archive are extracted.",
                     IDC_TEXT,0,0,275,21
-    CONTROL         "Progress1",IDC_PROGRESSBAR,"msctls_progress32",
+    CONTROL         "",IDC_PROGRESSBAR,"msctls_progress32",
                     PBS_SMOOTH,0,45,275,12
     LTEXT           "",IDC_STATUS,0,36,275,8,SS_PATHELLIPSIS
 END
@@ -70,7 +70,7 @@ BEGIN
     LTEXT           "Copyright © 2000-2023 Andrew Fawcett and contributors.\n\nFreeExtractor is free and open source.",
                     IDC_TEXT,40,24,158,43
     DEFPUSHBUTTON   "OK",IDOK,143,84,49,14,WS_GROUP
-    LTEXT           "http://www.disoriented.com",IDC_URL,40,73,158,8,
+    LTEXT           "",IDC_URL,40,73,158,8,
                     SS_NOTIFY
 END
 
@@ -81,27 +81,6 @@ END
 
 IDB_INTRO               BITMAP  DISCARDABLE     "..\\res\\intro.bmp"
 IDB_BITMAP1             BITMAP  DISCARDABLE     "..\\res\\box.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDR_MENU1 MENU DISCARDABLE
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&About...",                   IDM_ABOUT
-    END
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_HAND1               CURSOR  DISCARDABLE     "..\\res\\hand.cur"
 
 /////////////////////////////////////////////////////////////////////////////
 //

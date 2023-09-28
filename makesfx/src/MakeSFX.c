@@ -93,6 +93,8 @@ int main( int argc, char *argv[] )
       else
          if ( !_strcmpi( token, "/sfx" ) ) gettoken( argument, "=", 1, szEXEOutPath );
       else
+         if ( !_strcmpi( token, "/osversion" ) ) gettoken( argument, "=", 1, szTargetVer );
+      else
          if ( !_strcmpi( token, "/icon" ) )
          {
             bChangeIcon = TRUE;
@@ -175,6 +177,8 @@ int main( int argc, char *argv[] )
             "                                      $windir$, $targetdir$ and $sysdir$. You\n"
             "                                      may also hard-code a path.\n\n"
             "  /runelevated                        Run as administrator.\n"
+            "  /osversion=4.10                     Set the minimum required windows version\n"
+            "                                      to run the SFX.\n"
             "  /subsystem64                        Run in 64 bit subsystem.\n"
             "  /autoextract                        Automatically extract the contents to\n"
             "                                      the default path. Don't prompt the user.\n"

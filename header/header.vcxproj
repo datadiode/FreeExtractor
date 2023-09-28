@@ -393,7 +393,6 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
     <Image Include="res\setup.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\cbg.bin" />
     <None Include="res\hand.cur" />
   </ItemGroup>
   <ItemGroup>

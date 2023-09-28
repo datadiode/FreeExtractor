@@ -46,6 +46,8 @@
 #define IDC_OPENFOLDER                  1029
 #define IDR_MENU1                       1030
 #define IDC_SUBSYSTEM64                 1031
+#define IDC_TARGETVER                   1032
+#define IDC_TARGETVERLABEL              1033
 #define IDC_STATUSLABEL                 2000
 #define IDC_CONFIRMMESSAGE              2005
 #define IDC_INILABEL                    2006
