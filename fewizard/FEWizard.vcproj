@@ -90,7 +90,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mt.exe -manifest &quot;$(SolutionDir)common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName).exe&quot;&#x0D;&#x0A;"
+				CommandLine="mt.exe -manifest &quot;..\common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName).exe&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -171,7 +171,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mt.exe -manifest &quot;$(SolutionDir)common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName).exe&quot;&#x0D;&#x0A;"
+				CommandLine="mt.exe -manifest &quot;..\common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName).exe&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -253,10 +253,6 @@
 						AdditionalIncludeDirectories="src"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="res\hand.cur"
-				>
 			</File>
 			<File
 				RelativePath="res\icon1.ico"

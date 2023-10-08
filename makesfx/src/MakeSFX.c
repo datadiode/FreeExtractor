@@ -150,7 +150,7 @@ int main( int argc, char *argv[] )
 
    if ( isHelp )
    {
-      puts( "MakeSFX "VERSIONDATE"\n"
+      puts( "MakeSFX "VERSION"\n"
             "\n"
             "Converts a zip file into a 32-bit GUI Windows self-extractor.\n\n"
             "® Example usage ¯\n\n"

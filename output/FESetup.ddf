@@ -1,0 +1,14 @@
+;*** MakeCAB Directive file;
+.OPTION EXPLICIT
+.Set CabinetNameTemplate="FESetup.cab"
+.Set MaxDiskSize=0
+.Set Cabinet=on
+.Set Compress=on
+.Set CompressionType=LZX
+.Set CompressionMemory=18
+
+	"..\docs\Icons\blue box.ico" "Icons\blue box.ico"
+	"..\docs\Icons\Old Style.ico" "Icons\Old Style.ico"
+	"FEHelp.chm" "FEHelp.chm"
+	"FEWizard.exe" "FEWizard.exe"
+	"MakeSFX.exe" "MakeSFX.exe"

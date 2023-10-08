@@ -14,7 +14,6 @@
 #define IDD_SHORTCUT                    120
 #define IDD_ICON                        121
 #define IDD_ADDSHORTCUT                 122
-#define IDC_HAND1                       123
 #define IDI_ICON1                       126
 #define IDB_BITMAP1                     127
 #define IDD_ABOUT                       128

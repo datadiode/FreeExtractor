@@ -1,0 +1,21 @@
+version: 1.0.{build}
+image: Visual Studio 2015
+
+clone_script:
+- git clone -q --recursive --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
+- git checkout -qf %APPVEYOR_REPO_COMMIT%
+
+environment:
+  VIRUSTOTAL_API_KEY:
+    secure: 6VgzXytQY3l+cUPsvEuhSqu/E8JqJQPOK1Kh7mViN0SJ1M3ZHzteSpC56q3HbWXSUCAhk7ynS0BVBYDWVxi5XSXdRLCRiWaAgG7zeNoNk6Q=
+
+build_script:
+- build_script.bat
+
+after_build:
+- output\MakeSetup.bat
+- bash.exe %APPVEYOR_BUILD_FOLDER%\virustotal_upload %APPVEYOR_BUILD_FOLDER%\output\FESetup.exe %APPVEYOR_BUILD_FOLDER%\output\virustotal_report.jsn
+
+artifacts:
+- path: output\FESetup.exe
+- path: output\virustotal_report.jsn

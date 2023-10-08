@@ -44,6 +44,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;MINIZ_NO_STDIO;MINIZ_NO_TIME;_DEBUG;_WINDOWS"
+				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="0"
 				WarningLevel="3"
@@ -89,7 +90,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mt.exe -manifest &quot;$(SolutionDir)common\requireAdministrator.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName)32_elevated.exe&quot;&#x0D;&#x0A;mt.exe -manifest &quot;$(SolutionDir)common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName)32.exe&quot;&#x0D;&#x0A;"
+				CommandLine="mt.exe -manifest &quot;..\common\requireAdministrator.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName)32_elevated.exe&quot;&#x0D;&#x0A;mt.exe -manifest &quot;..\common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName)32.exe&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -123,6 +124,7 @@
 				InlineFunctionExpansion="0"
 				PreprocessorDefinitions="WIN32;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS"
 				StringPooling="true"
+				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -170,7 +172,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mt.exe -manifest &quot;$(SolutionDir)common\requireAdministrator.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName)32_elevated.exe&quot;&#x0D;&#x0A;mt.exe -manifest &quot;$(SolutionDir)common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName)32.exe&quot;&#x0D;&#x0A;"
+				CommandLine="mt.exe -manifest &quot;..\common\requireAdministrator.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName)32_elevated.exe&quot;&#x0D;&#x0A;mt.exe -manifest &quot;..\common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName)32.exe&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -202,6 +204,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_CAB_HEADER_;MINIZ_NO_STDIO;MINIZ_NO_TIME;_DEBUG;_WINDOWS"
+				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="0"
 				WarningLevel="3"
@@ -247,7 +250,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mt.exe -manifest &quot;$(SolutionDir)common\requireAdministrator.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName)32_cab_elevated.exe&quot;&#x0D;&#x0A;mt.exe -manifest &quot;$(SolutionDir)common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName)32_cab.exe&quot;&#x0D;&#x0A;"
+				CommandLine="mt.exe -manifest &quot;..\common\requireAdministrator.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName)32_cab_elevated.exe&quot;&#x0D;&#x0A;mt.exe -manifest &quot;..\common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName)32_cab.exe&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -281,6 +284,7 @@
 				InlineFunctionExpansion="0"
 				PreprocessorDefinitions="WIN32;_CAB_HEADER_;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS"
 				StringPooling="true"
+				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -328,7 +332,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mt.exe -manifest &quot;$(SolutionDir)common\requireAdministrator.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName)32_cab_elevated.exe&quot;&#x0D;&#x0A;mt.exe -manifest &quot;$(SolutionDir)common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)output\$(TargetName)32_cab.exe&quot;&#x0D;&#x0A;"
+				CommandLine="mt.exe -manifest &quot;..\common\requireAdministrator.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName)32_cab_elevated.exe&quot;&#x0D;&#x0A;mt.exe -manifest &quot;..\common\asInvoker.manifest&quot; -outputresource:&quot;$(TargetPath)&quot;&#x0D;&#x0A;copy &quot;$(TargetPath)&quot; &quot;..\output\$(TargetName)32_cab.exe&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -463,10 +467,6 @@
 			>
 			<File
 				RelativePath="res\box.bmp"
-				>
-			</File>
-			<File
-				RelativePath="res\hand.cur"
 				>
 			</File>
 			<File

@@ -60,7 +60,7 @@
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.51"
+#define VERSION            "v1.52"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0

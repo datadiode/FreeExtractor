@@ -1,3 +1,9 @@
+FreeExtractor v1.52, October 8, 2023
+
+   - Make FESetup.exe smaller by using the .CAB format.
+   - Make builds reproducible with help of https://github.com/jasonwhite/ducible.
+   - Set up CI with AppVeyor, including an automatic upload of FESetup.exe to VirusTotal.
+
 FreeExtractor v1.51, September 22, 2023
 
    - SFX: Load the cabinet.dll explicitly specifying its full path, to thwart possible DLL hijacking attacks.

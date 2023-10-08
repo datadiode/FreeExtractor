@@ -611,7 +611,7 @@ void SetDialogPage()
       EnableWindow( GetDlgItem( hwndMain, IDC_BACK ), FALSE );
       EnableWindow( GetDlgItem( hwndMain, IDC_NEXT ), TRUE );
 
-      SetDlgItemText( hwndStatic, IDC_VERSION_DATE, VERSIONDATE );
+      SetDlgItemText( hwndStatic, IDC_VERSION_DATE, VERSION );
       SetDlgItemText( hwndStatic, IDC_INTROTEXT, szWizIntroText );
       SetDlgItemText( hwndStatic, IDC_URL, WEBSITE_URL );
       break;

@@ -7,7 +7,6 @@
 #define IDD_FINISHED                    107
 #define IDB_ARROW                       110
 #define IDR_MENU1                       113
-#define IDC_HAND1                       123
 #define IDB_BITMAP1                     126
 #define IDD_ABOUT                       129
 #define IDR_BIN1                        134
