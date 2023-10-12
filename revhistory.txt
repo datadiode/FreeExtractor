@@ -1,3 +1,8 @@
+FreeExtractor v1.53, October 12, 2023
+
+   - Expose the dialog placement as $dialogplacement$, in the form expected by IHTMLWindow2::showModalDialog(),
+     to allow a visually almost seamless transition to an .hta script which can do the fancy stuff.
+
 FreeExtractor v1.52, October 8, 2023
 
    - Make FESetup.exe smaller by using the .CAB format.

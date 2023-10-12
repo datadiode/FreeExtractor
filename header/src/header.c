@@ -251,7 +251,7 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       //
       // Set the window icon
       //
-      SetClassLongPtr( hDlg, GCLP_HICON, ( LONG_PTR ) LoadIcon( ghInstance, MAKEINTRESOURCE( IDI_SETUP1 ) ) );
+      SendMessage( hDlg, WM_SETICON, 0, ( LPARAM ) LoadIcon( ghInstance, MAKEINTRESOURCE( IDI_SETUP1 ) ) );
 
       return TRUE;
 

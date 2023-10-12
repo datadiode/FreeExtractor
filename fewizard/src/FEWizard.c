@@ -327,7 +327,7 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
       hwndMain = hDlg;
 
       SetTitle( "FreeExtractor Wizard" );
-      SetClassLongPtr( hDlg, GCLP_HICON, ( LONG_PTR ) LoadIcon( ghInstance, MAKEINTRESOURCE( IDI_SETUP1 ) ) );
+      SendMessage( hDlg, WM_SETICON, 0, ( LPARAM ) LoadIcon( ghInstance, MAKEINTRESOURCE( IDI_SETUP1 ) ) );
 
       //
       // Check to see if a filename was passed from the command

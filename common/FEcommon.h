@@ -60,7 +60,7 @@
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.52"
+#define VERSION            "v1.53"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
@@ -536,6 +536,20 @@ void ParsePath( char *output, int size )
       else if ( !lstrcmpi( token, "cmdline" ) )
       {
          lstrcpyn( token, GetCommandLine(), _countof(token) );
+      }
+
+      //
+      // Dialog placement in the form expected by IHTMLWindow2::showModalDialog()
+      //
+      else if ( !lstrcmpi( token, "dialogplacement" ) )
+      {
+         RECT rcWindow = { 0, 0, 0, 0 };
+         RECT rcClient = { 0, 0, 0, 0 };
+         GetWindowRect( hwndMain, &rcWindow );
+         GetClientRect( hwndMain, &rcClient );
+         wsprintf( token,
+            "dialogLeft:%dpx;dialogTop:%dpx;dialogWidth:%dpx;dialogHeight:%dpx",
+            rcWindow.left, rcWindow.top, rcClient.right, rcClient.bottom);
       }
 
       //
