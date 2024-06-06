@@ -60,7 +60,7 @@
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.53"
+#define VERSION            "v1.54"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
@@ -412,6 +412,7 @@ void ParsePath( char *output, int size )
 
    char input[ 4096 ];
    char token[ 4096 ];
+   char tmp[ MAX_PATH ];
 
    ExpandEnvironmentStrings( output, input, _countof(input) );
 
@@ -550,6 +551,26 @@ void ParsePath( char *output, int size )
          wsprintf( token,
             "dialogLeft:%dpx;dialogTop:%dpx;dialogWidth:%dpx;dialogHeight:%dpx",
             rcWindow.left, rcWindow.top, rcClient.right, rcClient.bottom);
+      }
+
+      //
+      // Registry location in the form registry:Hive\MyKey\MySubKey@Value
+      //
+      else if ( lstrlen( token ) < sizeof tmp && lstrcpyn( tmp, token, sizeof "registry:" ) && !lstrcmpi( tmp, "registry:" ) )
+      {
+        HKEY hKey = lstrcpyn( tmp, token + sizeof "registry", sizeof "HKCR\\" ) && !lstrcmpi( tmp, "HKCR\\" ) ? HKEY_CLASSES_ROOT :
+                    lstrcpyn( tmp, token + sizeof "registry", sizeof "HKCU\\" ) && !lstrcmpi( tmp, "HKCU\\" ) ? HKEY_CURRENT_USER :
+                    lstrcpyn( tmp, token + sizeof "registry", sizeof "HKLM\\" ) && !lstrcmpi( tmp, "HKLM\\" ) ? HKEY_LOCAL_MACHINE :
+                    NULL;
+        gettoken( token, "@", 0, tmp );
+        if ( hKey && RegOpenKeyEx( hKey, tmp + sizeof "registry:????", 0, KEY_READ, &hKey ) == ERROR_SUCCESS )
+        {
+          int l = MAX_PATH;
+          int t = REG_SZ;
+          gettoken( token, "@", 1, tmp );
+          RegQueryValueEx( hKey, tmp, NULL, &t, token, &l );
+          RegCloseKey( hKey );
+        }
       }
 
       //
