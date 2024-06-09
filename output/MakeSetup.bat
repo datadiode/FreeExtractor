@@ -1,8 +1,7 @@
 @echo off
 pushd "%~dp0"
 for /f "tokens=*" %%G in ('where git.exe') do set git.exe="%%G"
-set touch.exe=%git.exe:cmd\git.exe=usr\bin\touch.exe%
-set touch.exe=%git.exe:bin\git.exe=usr\bin\touch.exe%
+set touch.exe=C:\msys64\usr\bin\touch.exe
 REM Read the version number from FEcommon.h
 for /F "tokens=1,2,3" %%G in (..\common\FEcommon.h) do if "%%G,%%H" == "#define,VERSION" set VERSION=%%I
 echo VERSION=%VERSION:"=%
