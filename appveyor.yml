@@ -18,4 +18,5 @@ after_build:
 
 artifacts:
 - path: output\FESetup.exe
+- path: output\FESetup.zip
 - path: output\virustotal_report.jsn
