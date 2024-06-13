@@ -60,7 +60,7 @@
 
 #define _CRITICAL_         MB_ICONSTOP
 
-#define VERSION            "v1.54"
+#define VERSION            "v1.55"
 #define VERSIONDATE        VERSION" ("__DATE__")"
 #define WEBSITE_URL        "http://www.disoriented.com"
 #define CASESENSITIVITY    0
@@ -189,7 +189,7 @@ void RaiseError( LPTSTR szTheErrorText )
                      _countof(szWinError),
                      NULL );
    }
-   wsprintf( buf, "An error prevents this program from continuing:\n\n %s %s", szTheErrorText, szWinError );
+   wsprintf( buf, "An error prevents this program from continuing:\n\n%s %s", szTheErrorText, szWinError );
 
 #ifdef _CONSOLE
    WriteConsoleOut( "ERROR: %s\n", buf );
@@ -624,7 +624,7 @@ BOOL CreateDirectoryRecursively( LPTSTR szPath )
 }
 
 
-#ifndef _CONSOLE
+#if !defined(_CONSOLE) && !defined(_ZPAQ_HEADER_)
 void *memset( void * dst, int value, size_t count )
 {
    void * ret = dst;
@@ -734,6 +734,12 @@ DWORD CALLBACK Build( void *dummy )
             bRunElevated ? "header64_cab_elevated" : "header64_cab"
          ) : (
             bRunElevated ? "header32_cab_elevated" : "header32_cab"
+         )
+      ) : IsExtension(szZipFileName, "zpaq") ? (
+         bSubsystem64 ? (
+            bRunElevated ? "header64_zpaq_elevated" : "header64_zpaq"
+         ) : (
+            bRunElevated ? "header32_zpaq_elevated" : "header32_zpaq"
          )
       ) : (
          bSubsystem64 ? (

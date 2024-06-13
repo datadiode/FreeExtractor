@@ -1,3 +1,8 @@
+FreeExtractor v1.55, June 23, 2024
+
+   - Add ZPAQ support (based on ZPAQ version 7.15)
+   - Allow registry location placeholders in the form $registry:Hive\MyKey\MySubKey@Value$
+
 FreeExtractor v1.53, October 12, 2023
 
    - Expose the dialog placement as $dialogplacement$, in the form expected by IHTMLWindow2::showModalDialog(),

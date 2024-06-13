@@ -13,6 +13,9 @@
       <UniqueIdentifier>{f33ca562-95c5-4e7a-8a43-93a893b1d314}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
+    <Filter Include="zpaq">
+      <UniqueIdentifier>{9987477d-2c23-40c6-bdea-547f3ebe46ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\header.c">
@@ -23,6 +26,12 @@
     </ClCompile>
     <ClCompile Include="src\miniz.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\zpaq\libzpaq.cpp">
+      <Filter>zpaq</Filter>
+    </ClCompile>
+    <ClCompile Include="src\zpaq\zpaq.cpp">
+      <Filter>zpaq</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -40,6 +49,9 @@
     </ClInclude>
     <ClInclude Include="src\miniz.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\zpaq\libzpaq.h">
+      <Filter>zpaq</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
