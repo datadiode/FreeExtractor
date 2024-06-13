@@ -9,6 +9,12 @@ msbuild /t:Rebuild header\header.vcxproj /p:SolutionDir=%~dp0 /p:Platform=x64 /p
 msbuild /t:Rebuild header\header.vcxproj /p:SolutionDir=%~dp0 /p:Platform=x64 /p:Configuration=Release_CAB
 %ducible.exe% output\header64_cab.exe
 %ducible.exe% output\header64_cab_elevated.exe
+msbuild /t:Rebuild header\header.vcxproj /p:SolutionDir=%~dp0 /p:Platform=x64 /p:Configuration=Release_ZPAQ
+%ducible.exe% output\header64_zpaq.exe
+%ducible.exe% output\header64_zpaq_elevated.exe
+msbuild /t:Rebuild header\header.vcxproj /p:SolutionDir=%~dp0 /p:Platform=Win32 /p:Configuration=Release_ZPAQ
+%ducible.exe% output\header32_zpaq.exe
+%ducible.exe% output\header32_zpaq_elevated.exe
 endlocal
 
 setlocal

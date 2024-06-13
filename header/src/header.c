@@ -33,7 +33,9 @@
 #include "header.h"
 #include "resource.h"
 
-#ifdef _CAB_HEADER_
+#if defined _ZPAQ_HEADER_
+#define ARCHIVE_SIGNATURE "7kSt"
+#elif defined _CAB_HEADER_
 #define ARCHIVE_SIGNATURE "MSCF"
 #else
 #define ARCHIVE_SIGNATURE "PK\x03\x04"
@@ -333,8 +335,9 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             CleanPath( szTargetDirectory );
 
             GetDlgItemText( hwndStatic, IDC_EXTRACTPATH, szTargetDirectory, MAX_PATH );
+#ifndef _ZPAQ_HEADER_ // happens in zpaq
             lstrcat( szTargetDirectory, "\\" );
-
+#endif
             //
             // If directory doesn't already exist ...
             //
@@ -351,10 +354,12 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
                   if ( MessageBox( hDlg, "The target directory doesn't exist. Create it?", "Create Directory?", MB_YESNO | MB_ICONQUESTION ) != IDYES )
                      return TRUE;
                }
+#ifndef _ZPAQ_HEADER_ // happens in zpaq
                //
                // The "auto create dir" checkbox *is* checked. If it doesn't exist, try to create it.
                //
                CreateDirCheckError( szTargetDirectory );
+#endif
             }
          }
 
@@ -507,7 +512,11 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
    return FALSE;
 }
 
-#ifdef _CAB_HEADER_
+#if defined _ZPAQ_HEADER_
+
+DWORD CALLBACK Extract(void* dummy);
+
+#elif defined _CAB_HEADER_
 
 // Code reused from https://github.com/mcho/CmdOpen/blob/master/setup/cabinet.c
 // Copyright (C) Kai Liu
@@ -708,12 +717,6 @@ DWORD CALLBACK Extract( void *dummy )
    //
    ExecCommand();
 
-   //
-   // Open the folder in Explorer
-   //
-   if ( bOpenFolder )
-      OpenExplorerFolder( szTargetDirectory );
-
    CleanUp();
    return 0;
 }
@@ -851,12 +854,6 @@ DWORD CALLBACK Extract( void *dummy )
    // If we're on the last dialog page, execute the command (if any)
    //
    ExecCommand();
-
-   //
-   // Open the folder in Explorer
-   //
-   if ( bOpenFolder )
-      OpenExplorerFolder( szTargetDirectory );
 
    if ( iDeleteFiles )
    {
@@ -1346,6 +1343,12 @@ void ExecCommand()
          }
       }
    }
+
+   //
+   // Open the folder in Explorer
+   //
+   if ( bOpenFolder )
+      OpenExplorerFolder( szTargetDirectory );
 }
 
 

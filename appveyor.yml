@@ -10,6 +10,10 @@ environment:
     secure: 6VgzXytQY3l+cUPsvEuhSqu/E8JqJQPOK1Kh7mViN0SJ1M3ZHzteSpC56q3HbWXSUCAhk7ynS0BVBYDWVxi5XSXdRLCRiWaAgG7zeNoNk6Q=
 
 build_script:
+- C:/msys64/usr/bin/wget.exe -nv "https://downloads.dlang.org/releases/2.x/2.108.1/dmd-2.108.1.exe"
+- start /wait dmd-2.108.1.exe /S
+- C:/msys64/usr/bin/wget.exe -nv https://github.com/datadiode/mingw-w64-libs/releases/download/v8.0.2/mingw-w64-libs-v8.0.2.exe
+- 7z x mingw-w64-libs-v8.0.2.exe -y -oC:\D
 - build_script.bat
 
 after_build:

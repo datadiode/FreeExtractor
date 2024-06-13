@@ -9,6 +9,14 @@
       <Configuration>Debug_CAB</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_ZPAQ|Win32">
+      <Configuration>Debug_ZPAQ</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_ZPAQ|x64">
+      <Configuration>Debug_ZPAQ</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -23,6 +31,14 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release_CAB|x64">
       <Configuration>Release_CAB</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_ZPAQ|Win32">
+      <Configuration>Release_ZPAQ</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_ZPAQ|x64">
+      <Configuration>Release_ZPAQ</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
@@ -52,6 +68,18 @@
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v140_xp</PlatformToolset>
@@ -59,6 +87,18 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_CAB|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v140_xp</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
@@ -99,11 +139,27 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_CAB|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
   </ImportGroup>
@@ -123,7 +179,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
   </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <DMD>$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\DMD@InstallationFolder)</DMD>
+  </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>14.0.25431.1</_ProjectFileVersion>
   </PropertyGroup>
@@ -151,11 +209,27 @@
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_CAB|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|x64'">
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
@@ -319,6 +393,85 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|Win32'">
+    <ClCompile>
+      <Optimization>MinSpace</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <PreprocessorDefinitions>WIN32;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>mingw\msvcrt.lib;mingw\oldnames.lib;mingw\legacy_stdio_definitions.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(DMD)\dmd2\windows\lib32mscoff;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+    <PostBuildEvent>
+      <Command>mt.exe -manifest "$(SolutionDir)common\asInvoker.manifest" -outputresource:"$(TargetPath)"
+copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_zpaq.exe"
+mt.exe -manifest "$(SolutionDir)common\requireAdministrator.manifest" -outputresource:"$(TargetPath)"
+copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_zpaq_elevated.exe"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|Win32'">
+    <ClCompile>
+      <Optimization>MinSpace</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <PreprocessorDefinitions>WIN32;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>mingw\msvcrt.lib;mingw\oldnames.lib;mingw\legacy_stdio_definitions.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(DMD)\dmd2\windows\lib32mscoff;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+    </Link>
+    <PostBuildEvent>
+      <Command>if exist "$(SolutionDir)testarchive.zpaq" copy /b "$(TargetPath)" + "$(SolutionDir)testarchive.zpaq" "$(TargetDir)testarchive.exe"
+mt.exe -manifest "$(SolutionDir)common\asInvoker.manifest" -outputresource:"$(TargetPath)"
+copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_zpaq.exe"
+mt.exe -manifest "$(SolutionDir)common\requireAdministrator.manifest" -outputresource:"$(TargetPath)"
+copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_zpaq_elevated.exe"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <Optimization>MinSpace</Optimization>
@@ -375,10 +528,116 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|x64'">
+    <ClCompile>
+      <Optimization>MinSpace</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <PreprocessorDefinitions>WIN32;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <AdditionalDependencies>mingw\msvcrt.lib;mingw\oldnames.lib;mingw\legacy_stdio_definitions.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(DMD)\dmd2\windows\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+    <PostBuildEvent>
+      <Command>mt.exe -manifest "$(SolutionDir)common\asInvoker.manifest" -outputresource:"$(TargetPath)"
+copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_zpaq.exe"
+mt.exe -manifest "$(SolutionDir)common\requireAdministrator.manifest" -outputresource:"$(TargetPath)"
+copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_zpaq_elevated.exe"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|x64'">
+    <ClCompile>
+      <Optimization>MinSpace</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <PreprocessorDefinitions>WIN32;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <AdditionalDependencies>mingw\msvcrt.lib;mingw\oldnames.lib;mingw\legacy_stdio_definitions.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(DMD)\dmd2\windows\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+    </Link>
+    <PostBuildEvent>
+      <Command>if exist "$(SolutionDir)testarchive.zpaq" copy /b "$(TargetPath)" + "$(SolutionDir)testarchive.zpaq" "$(TargetDir)testarchive.exe"
+mt.exe -manifest "$(SolutionDir)common\asInvoker.manifest" -outputresource:"$(TargetPath)"
+copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_zpaq.exe"
+mt.exe -manifest "$(SolutionDir)common\requireAdministrator.manifest" -outputresource:"$(TargetPath)"
+copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_zpaq_elevated.exe"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\header.c" />
-    <ClCompile Include="src\miniz.c" />
+    <ClCompile Include="src\miniz.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_CAB|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_CAB|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_CAB|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_CAB|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\shell.cpp" />
+    <ClCompile Include="src\zpaq\libzpaq.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_CAB|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_CAB|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_CAB|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_CAB|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\zpaq\zpaq.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_CAB|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_CAB|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_CAB|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_CAB|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\FEcommon.h" />
@@ -386,6 +645,7 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
     <ClInclude Include="src\miniz.h" />
     <ClInclude Include="src\resource.h" />
     <ClInclude Include="src\shell.h" />
+    <ClInclude Include="src\zpaq\libzpaq.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\box.bmp" />
@@ -403,8 +663,12 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug_CAB|x64'">src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release_CAB|Win32'">src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|Win32'">src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|Win32'">src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release_CAB|x64'">src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release_ZPAQ|x64'">src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug_ZPAQ|x64'">src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
