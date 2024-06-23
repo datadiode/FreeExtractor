@@ -13,7 +13,7 @@ build_script:
 - C:/msys64/usr/bin/wget.exe -nv "https://downloads.dlang.org/releases/2.x/2.108.1/dmd-2.108.1.exe"
 - start /wait dmd-2.108.1.exe /S
 - C:/msys64/usr/bin/wget.exe -nv https://github.com/datadiode/mingw-w64-libs/releases/download/v8.0.2/mingw-w64-libs-v8.0.2.exe
-- 7z x mingw-w64-libs-v8.0.2.exe -y -oC:\D
+- start /wait mingw-w64-libs-v8.0.2.exe /autoextract
 - build_script.bat
 
 after_build:
