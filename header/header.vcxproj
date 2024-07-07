@@ -53,7 +53,6 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{718FF087-4E59-42BE-9FCA-29AA62CDABA9}</ProjectGuid>
     <RootNamespace>header</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -397,7 +396,7 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
     <ClCompile>
       <Optimization>MinSpace</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <PreprocessorDefinitions>WIN32;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -435,7 +434,7 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
     <ClCompile>
       <Optimization>MinSpace</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <PreprocessorDefinitions>WIN32;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -532,7 +531,7 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
     <ClCompile>
       <Optimization>MinSpace</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <PreprocessorDefinitions>WIN32;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -569,7 +568,7 @@ copy "$(TargetPath)" "$(SolutionDir)output\$(TargetName)$(PlatformArchitecture)_
     <ClCompile>
       <Optimization>MinSpace</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <PreprocessorDefinitions>WIN32;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_ZPAQ_HEADER_;_NO_CRT_STDIO_INLINE;_HAS_EXCEPTIONS=0;MINIZ_NO_STDIO;MINIZ_NO_TIME;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
