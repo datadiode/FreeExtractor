@@ -67,7 +67,7 @@ CAPTION "About FreeExtractor"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "",IDC_TITLE,40,12,158,8
-    LTEXT           "Copyright © 2000-2023 Andrew Fawcett and contributors.\n\nFreeExtractor is free and open source.",
+    LTEXT           "Copyright © 2000-2024 Andrew Fawcett and contributors.\n\nFreeExtractor is free and open source.",
                     IDC_TEXT,40,24,158,43
     DEFPUSHBUTTON   "OK",IDOK,143,84,49,14,WS_GROUP
     LTEXT           "",IDC_URL,40,73,158,8,

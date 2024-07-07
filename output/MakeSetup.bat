@@ -9,12 +9,13 @@ REM Set the mtime of all bundled files to the time of the latest commit
 for /f "delims=: tokens=1,*" %%G in ('git log -1 --date=iso') do if "%%G"=="Date" set GITDATE=%%H
 echo GITDATE=%GITDATE%
 for /f delims^=^"^ tokens^=2 %%G in (FESetup.ddf) do %touch.exe% -d "%GITDATE%" "%~dp0%%G"
-REM Create the ZIP
-del "FESetup.zip"
-"%ProgramFiles%\7-zip\7z.exe" a -mx9 "FESetup.zip" "..\docs\Icons\" "FEHelp.chm" "FEWizard.exe" "MakeSFX.exe"
+REM Create the archive
+del "FESetup.zpaq"
+xcopy ..\docs\Icons\ Icons\
+zpaq64 a "FESetup.zpaq" "Icons\*" "FEHelp.chm" "FEWizard.exe" "MakeSFX.exe" -m4
 REM Create the SFX
 makesfx.exe ^
-/zip="FESetup.zip" ^
+/zip="FESetup.zpaq" ^
 /sfx="FESetup.exe" ^
 /title="FreeExtractor Setup %VERSION:"=%" ^
 /website="https://github.com/datadiode/FreeExtractor" ^
