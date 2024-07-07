@@ -208,6 +208,8 @@ typedef int ThreadReturn;                                  // job return type
 #define lock sizeof
 #define release sizeof
 #define destroy_mutex sizeof
+#define printUTF8 sizeof
+#define printerr sizeof
 #define printf sizeof
 #define fprintf sizeof
 
@@ -344,6 +346,7 @@ public:
 
 #endif
 
+#ifndef _ZPAQ_HEADER_
 // Print a UTF-8 string to f (stdout, stderr) so it displays properly
 void printUTF8(const char* s, FILE* f=stdout) {
   assert(f);
@@ -448,6 +451,7 @@ time_t unix_time(int64_t date) {
   return (day-1+days[month]+(year%4==0 && month>1)+((year-1970)*1461+1)/4)
     *86400+hour*3600+min*60+sec;
 }
+#endif
 
 /////////////////////////////// File //////////////////////////////////
 
@@ -550,7 +554,7 @@ void printerr(const char* filename) {
   perror(filename);
 }
 
-#else
+#elif !defined(_ZPAQ_HEADER_)
 
 // Print last error message
 void printerr(const char* filename) {
@@ -3202,18 +3206,6 @@ int64_t copy(libzpaq::Reader& in, libzpaq::Writer& out, uint64_t n=~0ull) {
   return result;
 }
 
-static VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD)
-{
-    if (SendDlgItemMessage(hwndStatic, IDC_PROGRESSBAR, PBM_GETPOS, 0, 0) == 0)
-    {
-        char szStatusMessage[80];
-        UINT value = GetDlgItemInt(hwndStatic, IDC_STATUS, NULL, FALSE);
-        wsprintf(szStatusMessage, "%u seconds spent on decompressing ...", value + 1);
-        SetDlgItemText(hwndStatic, IDC_STATUS, szStatusMessage);
-        UpdateWindow(hwndStatic);
-    }
-}
-
 // Extract files from archive. If force is true then overwrite
 // existing files and set the dates and attributes of exising directories.
 // Otherwise create only new files and directories. Return 1 if error else 0.
@@ -3502,7 +3494,6 @@ int Jidac::extract() {
   //
   SendDlgItemMessage(hwndStatic, IDC_PROGRESSBAR, PBM_SETSTEP, 1, 0);
   SendDlgItemMessage(hwndStatic, IDC_PROGRESSBAR, PBM_SETRANGE, 0, MAKELPARAM(0, total_files));
-  SetTimer(hwndStatic, 0, 1000, TimerProc);
 
   //vector<ThreadID> tid(threads);
   //for (unsigned i=0; i<tid.size(); ++i) run(tid[i], decompressThread, &job);

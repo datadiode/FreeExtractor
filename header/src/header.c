@@ -514,6 +514,18 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
 
 #if defined _ZPAQ_HEADER_
 
+static VOID CALLBACK TimerProc(HWND hWnd, UINT uMsg, UINT_PTR nIDEvent, DWORD dwTime)
+{
+   if (SendDlgItemMessage(hwndStatic, IDC_PROGRESSBAR, PBM_GETPOS, 0, 0) == 0)
+   {
+      char szStatusMessage[80];
+      UINT value = GetDlgItemInt(hwndStatic, IDC_STATUS, NULL, FALSE);
+      wsprintf(szStatusMessage, "%u seconds spent on decompressing ...", value + 1);
+      SetDlgItemText(hwndStatic, IDC_STATUS, szStatusMessage);
+      UpdateWindow(hwndStatic);
+   }
+}
+
 DWORD CALLBACK Extract(void* dummy);
 
 #elif defined _CAB_HEADER_
@@ -1011,6 +1023,9 @@ void SetDialogPage()
       DLGITEM_SETFONT( hwndStatic, IDC_TEXT )
       DLGITEM_SETFONT( hwndStatic, IDC_STATUS )
 
+#if defined _ZPAQ_HEADER_
+      SetTimer(hwndStatic, 0, 1000, TimerProc);
+#endif
       CloseHandle( CreateThread( NULL, 0, Extract, NULL, 0, &dwThreadId ) );
 
       break;

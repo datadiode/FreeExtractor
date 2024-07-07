@@ -875,9 +875,6 @@ public:
   virtual ~Writer() {}
 };
 
-// Read 16 bit little-endian number
-int toU16(const char* p);
-
 // An Array of T is cleared and aligned on a 64 byte address
 //   with no constructors called. No copy or assignment.
 // Array<T> a(n, ex=0);  - creates n<<ex elements of type T
@@ -940,16 +937,15 @@ public:
     if ((U32(len)&511)==0) process();
   }
   void write(const char* buf, int64_t n); // hash buf[0..n-1]
-  double size() const {return len/8;}     // size in bytes
   uint64_t usize() const {return len/8;}  // size in bytes
-  const char* result();  // get hash and reset
+  const U32* result();  // get hash and reset
   SHA1() {init();}
 private:
   void init();      // reset, but don't clear hbuf
   U64 len;          // length in bits
   U32 h[5];         // hash state
   U32 w[16];        // input buffer
-  char hbuf[20];    // result
+  U32 hbuf[5];      // result
   void process();   // hash 1 block
 };
 
@@ -965,7 +961,6 @@ public:
     if (!(len0+=8)) ++len1;
     if ((len0&511)==0) process();
   }
-  double size() const {return len0/8+len1*536870912.0;} // size in bytes
   uint64_t usize() const {return len0/8+(U64(len1)<<29);} //size in bytes
   const char* result();  // get hash and reset
   SHA256() {init();}
@@ -1267,24 +1262,6 @@ private:
 
 void decompress(Reader* in, Writer* out);
 
-//////////////////////////// Encoder /////////////////////////
-
-// Encoder compresses using an arithmetic code
-class Encoder {
-public:
-  Encoder(ZPAQL& z, int size=0):
-    out(0), low(1), high(0xFFFFFFFF), pr(z) {}
-  void init();
-  void compress(int c);  // c is 0..255 or EOF
-  int stat(int x) {return pr.stat(x);}
-  Writer* out;  // destination
-private:
-  U32 low, high; // range
-  Predictor pr;  // to get p
-  Array<char> buf; // unmodeled input
-  void encode(int y, int p); // encode bit y (0..1) with prob. p (0..65535)
-};
-
 //////////////////////////// Compiler ////////////////////////
 
 // Input ZPAQL source code with args and store the compiled code
@@ -1333,41 +1310,6 @@ private:
   };
 
   Stack if_stack, do_stack;
-};
-
-//////////////////////// Compressor //////////////////////////
-
-class Compressor {
-public:
-  Compressor(): enc(z), in(0), state(INIT), verify(false) {}
-  void setOutput(Writer* out) {enc.out=out;}
-  void writeTag();
-  void startBlock(int level);  // level=1,2,3
-  void startBlock(const char* hcomp);     // ZPAQL byte code
-  void startBlock(const char* config,     // ZPAQL source code
-                  int* args,              // NULL or int[9] arguments
-                  Writer* pcomp_cmd = 0); // retrieve preprocessor command
-  void setVerify(bool v) {verify = v;}    // check postprocessing?
-  void hcomp(Writer* out2) {z.write(out2, false);}
-  bool pcomp(Writer* out2) {return pz.write(out2, true);}
-  void startSegment(const char* filename = 0, const char* comment = 0);
-  void setInput(Reader* i) {in=i;}
-  void postProcess(const char* pcomp = 0, int len = 0);  // byte code
-  bool compress(int n = -1);  // n bytes, -1=all, return true until done
-  void endSegment(const char* sha1string = 0);
-  char* endSegmentChecksum(int64_t* size = 0, bool dosha1=true);
-  int64_t getSize() {return sha1.usize();}
-  const char* getChecksum() {return sha1.result();}
-  void endBlock();
-  int stat(int x) {return enc.stat(x);}
-private:
-  ZPAQL z, pz;  // model and test postprocessor
-  Encoder enc;  // arithmetic encoder containing predictor
-  Reader* in;   // input source
-  SHA1 sha1;    // to test pz output
-  char sha1result[20];  // sha1 output
-  enum {INIT, BLOCK1, SEG1, BLOCK2, SEG2} state;
-  bool verify;  // if true then test by postprocessing
 };
 
 /////////////////////////// StringBuffer /////////////////////
