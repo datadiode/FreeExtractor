@@ -79,6 +79,27 @@ BOOL IsZipFile( LPTSTR szFileName )
 
 /*
 
+   IsZpaqFile
+
+   Determines if a file is a real zpaq file by checking the first four
+   bytes of a file and checking for the ZPAQ signature header.
+
+*/
+BOOL IsZpaqFile( LPTSTR szFileName )
+{
+   char buf[4];
+   DWORD cb = 0;
+   HANDLE handle = CreateFile( szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
+   if ( handle != INVALID_HANDLE_VALUE )
+   {
+      ReadFile( handle, buf, 4, &cb, NULL );
+      CloseHandle( handle );
+   }
+   return cb == 4 && buf[ 0 ] == '7' && buf[ 1 ] == 'k' && buf[ 2 ] == 'S' && buf[ 3 ] == 't';
+}
+
+/*
+
    IsCabFile
 
    Determines if a file is a real cab file by checking the first four
@@ -346,6 +367,12 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             if ( !IsZipFile( szZipFileName ) )
                RaiseError( "The file you have specified is not a ZIP file." );
          }
+         else if ( PathMatchSpec( p, "*.zpaq" ) )
+         {
+            lstrcpy( szZipFileName, p );
+            if ( !IsZpaqFile( szZipFileName ) )
+               RaiseError( "The file you have specified is not a ZPAQ file." );
+         }
          else if ( PathMatchSpec( p, "*.cab" ) )
          {
             lstrcpy( szZipFileName, p );
@@ -432,14 +459,9 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             char szFileName[ MAX_PATH ];
             if ( DragQueryFile( hDrop, i, szFileName, _countof(szFileName) ) )
             {
-               if ( PathMatchSpec( szFileName, "*.zip" ) )
+               if ( PathMatchSpec( szFileName, "*.zip;*.zpaq;*.cab" ) )
                {
                   lstrcpy( szZipFileName, szFileName );
-                  Open();
-               }
-               else if (PathMatchSpec(szFileName, "*.cab"))
-               {
-                  lstrcpy(szZipFileName, szFileName);
                   Open();
                }
                else if ( PathMatchSpec( szFileName, "*.ini" ) )
@@ -962,7 +984,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
          }
 
       case IDC_EXECUTE:
-         if ( ( INT_PTR ) ShellExecute( hwndMain, "open", szEXEOutPath, NULL, NULL, 0 ) < 33 )
+         if ( ( INT_PTR ) ShellExecute( hwndMain, "open", szEXEOutPath, NULL, NULL, SW_SHOWNORMAL ) < 33 )
             RaiseError( "Could not execute self extractor." );
          CheckSaveSettings();
          CleanUp();
@@ -996,7 +1018,7 @@ INT_PTR CALLBACK ChildDialogProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM
             ofn.lpstrFile = szZipFileName;
             ofn.hInstance = ghInstance;
             ofn.nMaxFile = MAX_PATH;
-            ofn.lpstrFilter = "ZIP Files (*.zip)\0*.zip\0CAB Files (*.cab)\0*.cab\0All Files (*.*)\0*.*\0";
+            ofn.lpstrFilter = "ZIP Files (*.zip)\0*.zip\0ZPAQ Files (*.zpaq)\0*.zpaq\0CAB Files (*.cab)\0*.cab\0All Files (*.*)\0*.*\0";
             ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_ENABLESIZING | OFN_SHAREAWARE;
 
             if ( GetOpenFileName( &ofn ) ) Open();
@@ -1049,7 +1071,7 @@ void Open()
       // The user drag-and-dropped a directory. Handle gracefully.
       //
       *szZipFileName = '\0';
-      MessageBox( hwndMain, "Directories are not supported. Select a .zip or .cab file.", "FreeExtractor Error", 0 );
+      MessageBox( hwndMain, "Directories are not supported. Select a .zip, .zpaq, or .cab file.", "FreeExtractor Error", 0 );
    }
 
    SetDlgItemText( hwndStatic, IDC_ZIPPATH, szZipFileName );
