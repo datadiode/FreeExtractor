@@ -173,12 +173,12 @@ EXSTYLE WS_EX_TOOLWINDOW | WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "List1",IDC_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT |
+                    LVS_SHOWSELALWAYS | LVS_ALIGNLEFT |
                     WS_BORDER | WS_TABSTOP,0,9,276,103
     LTEXT           "Click 'Add' to have your self-extractor create a shortcut. Click 'Next' to continue.",
                     IDC_TEXT,0,0,275,8
     PUSHBUTTON      "&Add",IDC_ADD_SC,166,122,50,14
-    PUSHBUTTON      "&Remove",IDC_REMOVE_SC,226,122,50,14,WS_DISABLED
+    PUSHBUTTON      "&Remove",IDC_REMOVE_SC,226,122,50,14
 END
 
 IDD_ICON DIALOGEX 0, 0, 276, 136

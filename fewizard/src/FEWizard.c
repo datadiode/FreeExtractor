@@ -387,18 +387,24 @@ INT_PTR CALLBACK MainDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 
       if ( *szZipFileName )
       {
-          iCurrentPage = ZIP_PAGE;
-          SetDialogPage();
-          Open();
+         iCurrentPage = ZIP_PAGE;
+         SetDialogPage();
+         Open();
       }
       else
       {
-          iCurrentPage = SPLASH_PAGE;
-          SetDialogPage();
+         iCurrentPage = SPLASH_PAGE;
+         SetDialogPage();
       }
 
-      if ( *szINIPath )
+      if (*szINIPath)
+      {
          OpenINI();
+      }
+      else
+      {
+         hShortcuts = CreatePopupMenu();
+      }
 
       return TRUE;
 
@@ -603,7 +609,7 @@ void SetDialogPage()
    char *p;
    HWND hwndFocus;
 
-   UINT flags = iCurrentPage != SPLASH_PAGE ? SWP_NOSIZE | SWP_SHOWWINDOW : SWP_NOSIZE | SWP_HIDEWINDOW;
+   UINT flags = iCurrentPage != SPLASH_PAGE ? SWP_NOSIZE | SWP_SHOWWINDOW | SWP_FRAMECHANGED : SWP_NOSIZE | SWP_HIDEWINDOW;
 
    if ( hwndStatic != NULL ) DestroyWindow( hwndStatic );
 
